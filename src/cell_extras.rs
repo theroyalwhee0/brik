@@ -61,7 +61,9 @@
 use std::cell::Cell;
 use std::rc::{Rc, Weak};
 
+/// Extension trait for `Cell<Option<T>>` to check if the option is None without moving the value.
 pub trait CellOption {
+    /// Check if the Cell contains None without taking the value out.
     fn is_none(&self) -> bool;
 }
 
@@ -72,8 +74,11 @@ impl<T> CellOption for Cell<Option<T>> {
     }
 }
 
+/// Extension trait for `Cell<Option<Weak<T>>>` to access weak references without moving them.
 pub trait CellOptionWeak<T> {
+    /// Upgrade the weak reference to a strong reference without taking it out of the Cell.
     fn upgrade(&self) -> Option<Rc<T>>;
+    /// Clone the weak reference without taking it out of the Cell.
     fn clone_inner(&self) -> Option<Weak<T>>;
 }
 
@@ -89,10 +94,12 @@ impl<T> CellOptionWeak<T> for Cell<Option<Weak<T>>> {
     }
 }
 
+/// Extension trait for `Cell<Option<Rc<T>>>` to access strong references without moving them.
 pub trait CellOptionRc<T> {
     /// Return `Some` if this `Rc` is the only strong reference count,
     /// even if there are weak references.
     fn take_if_unique_strong(&self) -> Option<Rc<T>>;
+    /// Clone the strong reference without taking it out of the Cell.
     fn clone_inner(&self) -> Option<Rc<T>>;
 }
 

@@ -119,6 +119,7 @@ impl PrecomputedHash for LocalNameSelector {
     }
 }
 
+/// Selector implementation for kuchikiki's DOM.
 #[derive(Debug, Clone)]
 pub struct KuchikiSelectors;
 
@@ -137,6 +138,7 @@ impl SelectorImpl for KuchikiSelectors {
     type ExtraMatchingData<'a> = ();
 }
 
+/// Parser for CSS selectors.
 struct KuchikiParser;
 
 impl<'i> Parser<'i> for KuchikiParser {
@@ -179,17 +181,28 @@ impl<'i> Parser<'i> for KuchikiParser {
     }
 }
 
+/// Supported CSS pseudo-classes for element matching.
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum PseudoClass {
+    /// Matches `:any-link` (any link element).
     AnyLink,
+    /// Matches `:link` (unvisited links).
     Link,
+    /// Matches `:visited` (visited links).
     Visited,
+    /// Matches `:active` (activated elements).
     Active,
+    /// Matches `:focus` (focused elements).
     Focus,
+    /// Matches `:hover` (hovered elements).
     Hover,
+    /// Matches `:enabled` (enabled form elements).
     Enabled,
+    /// Matches `:disabled` (disabled form elements).
     Disabled,
+    /// Matches `:checked` (checked form elements).
     Checked,
+    /// Matches `:indeterminate` (indeterminate form elements).
     Indeterminate,
 }
 
@@ -228,6 +241,7 @@ impl ToCss for PseudoClass {
     }
 }
 
+/// CSS pseudo-elements (currently none are supported).
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum PseudoElement {}
 

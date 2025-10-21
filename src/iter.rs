@@ -196,9 +196,12 @@ impl NodeRef {
     }
 }
 
+/// Internal state for double-ended iterators.
 #[derive(Debug, Clone)]
 struct State<T> {
+    /// The next item to be returned from the front of the iterator.
     next: T,
+    /// The next item to be returned from the back of the iterator.
     next_back: T,
 }
 
@@ -206,6 +209,7 @@ struct State<T> {
 #[derive(Debug, Clone)]
 pub struct Siblings(Option<State<NodeRef>>);
 
+/// Macro to implement iterator methods for sibling traversal.
 macro_rules! siblings_next {
     ($next: ident, $next_back: ident, $next_sibling: ident) => {
         fn $next(&mut self) -> Option<NodeRef> {
@@ -258,6 +262,7 @@ impl Iterator for Ancestors {
 #[derive(Debug, Clone)]
 pub struct Descendants(Traverse);
 
+/// Macro to implement iterator methods for descendant traversal.
 macro_rules! descendants_next {
     ($next: ident) => {
         #[inline]
@@ -300,6 +305,7 @@ pub enum NodeEdge<T> {
 #[derive(Debug, Clone)]
 pub struct Traverse(Option<State<NodeEdge<NodeRef>>>);
 
+/// Macro to implement iterator methods for tree traversal with start/end edges.
 macro_rules! traverse_next {
     ($next: ident, $next_back: ident, $first_child: ident, $next_sibling: ident, $Start: ident, $End: ident) => {
         fn $next(&mut self) -> Option<NodeEdge<NodeRef>> {
@@ -349,6 +355,7 @@ impl DoubleEndedIterator for Traverse {
     traverse_next!(next_back, next, last_child, previous_sibling, End, Start);
 }
 
+/// Macro to create filter-map-like iterator wrappers.
 macro_rules! filter_map_like_iterator {
     (#[$doc: meta] $name: ident: $f: expr, $from: ty => $to: ty) => {
         #[$doc]

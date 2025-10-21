@@ -21,8 +21,7 @@ name = "kuchikiki"
 # missing_docs = "deny"
 
 [lints.rustdoc]
-# TODO: Enable once crate-level documentation is added.
-# missing_crate_level_docs = "deny"
+missing_crate_level_docs = "deny"
 broken_intra_doc_links = "deny"
 private_intra_doc_links = "deny"
 invalid_codeblock_attributes = "deny"
@@ -33,8 +32,7 @@ redundant_explicit_links = "deny"
 print_stdout = "deny"
 print_stderr = "deny"
 disallowed_methods = "deny"
-# TODO: Enable once all items have documentation.
-# missing_docs_in_private_items = "deny"
+missing_docs_in_private_items = "deny"
 missing_panics_doc = "deny"
 missing_errors_doc = "deny"
 missing_safety_doc = "deny"

@@ -115,11 +115,17 @@ impl PartialEq for NodeRef {
 
 /// A node inside a DOM-like tree.
 pub struct Node {
+    /// Weak reference to the parent node.
     parent: Cell<Option<Weak<Node>>>,
+    /// Weak reference to the previous sibling.
     previous_sibling: Cell<Option<Weak<Node>>>,
+    /// Strong reference to the next sibling.
     next_sibling: Cell<Option<Rc<Node>>>,
+    /// Strong reference to the first child.
     first_child: Cell<Option<Rc<Node>>>,
+    /// Weak reference to the last child.
     last_child: Cell<Option<Weak<Node>>>,
+    /// The data contained in this node.
     data: NodeData,
 }
 

@@ -1,3 +1,5 @@
+//! Example demonstrating that node dropping doesn't cause stack overflow with deep trees.
+
 #![allow(clippy::print_stdout)]
 
 fn main() {
