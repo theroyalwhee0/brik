@@ -60,10 +60,12 @@ pub fn parse_fragment_with_options(
     html5ever::parse_fragment(sink, html5opts, ctx_name, ctx_attr, false)
 }
 
+type ParseErrorHandler = RefCell<Option<Box<dyn FnMut(Cow<'static, str>)>>>;
+
 /// Receives new tree nodes during parsing.
 pub struct Sink {
     document_node: NodeRef,
-    on_parse_error: RefCell<Option<Box<dyn FnMut(Cow<'static, str>)>>>,
+    on_parse_error: ParseErrorHandler,
 }
 
 impl TreeSink for Sink {
