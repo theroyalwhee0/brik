@@ -14,6 +14,31 @@ edition = "2018"
 [lib]
 name = "kuchikiki"
 
+[lints.rust]
+# TODO: Enable once unsafe code is minimized or properly justified.
+# unsafe_code = "forbid"
+# TODO: Enable once all public APIs are documented.
+# missing_docs = "deny"
+
+[lints.rustdoc]
+# TODO: Enable once crate-level documentation is added.
+# missing_crate_level_docs = "deny"
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "deny"
+invalid_codeblock_attributes = "deny"
+bare_urls = "deny"
+redundant_explicit_links = "deny"
+
+[lints.clippy]
+print_stdout = "deny"
+print_stderr = "deny"
+disallowed_methods = "deny"
+# TODO: Enable once all items have documentation.
+# missing_docs_in_private_items = "deny"
+# missing_panics_doc = "deny"
+# missing_errors_doc = "deny"
+# missing_safety_doc = "deny"
+
 [features]
 # Enable bloom filter optimization for faster selector matching.
 # Recommended for applications doing heavy selector matching across many elements.

@@ -1,3 +1,5 @@
+#![allow(clippy::print_stdout)]
+
 use kuchikiki::traits::*;
 
 fn main() {
