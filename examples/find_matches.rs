@@ -41,6 +41,6 @@ fn main() {
         //
         //  "Hello, world!"
         //  "I love HTML"
-        println!("{:?}", text);
+        println!("{text:?}");
     }
 }
