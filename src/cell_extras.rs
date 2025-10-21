@@ -70,11 +70,11 @@ pub trait CellOption {
 impl<T> CellOption for Cell<Option<T>> {
     #[inline]
     fn is_none(&self) -> bool {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             unsafe { (*self.as_ptr()).is_none() }
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             let value = self.take();
             let result = value.is_none();
@@ -95,11 +95,11 @@ pub trait CellOptionWeak<T> {
 impl<T> CellOptionWeak<T> for Cell<Option<Weak<T>>> {
     #[inline]
     fn upgrade(&self) -> Option<Rc<T>> {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             unsafe { (*self.as_ptr()).as_ref().and_then(Weak::upgrade) }
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             let value = self.take();
             let result = value.as_ref().and_then(Weak::upgrade);
@@ -110,11 +110,11 @@ impl<T> CellOptionWeak<T> for Cell<Option<Weak<T>>> {
 
     #[inline]
     fn clone_inner(&self) -> Option<Weak<T>> {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             unsafe { (*self.as_ptr()).clone() }
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             let value = self.take();
             let result = value.clone();
@@ -136,7 +136,7 @@ pub trait CellOptionRc<T> {
 impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
     #[inline]
     fn take_if_unique_strong(&self) -> Option<Rc<T>> {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             unsafe {
                 match *self.as_ptr() {
@@ -148,7 +148,7 @@ impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
                 }
             }
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             let value = self.take();
             let result = match value {
@@ -165,11 +165,11 @@ impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
 
     #[inline]
     fn clone_inner(&self) -> Option<Rc<T>> {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             unsafe { (*self.as_ptr()).clone() }
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             let value = self.take();
             let result = value.clone();

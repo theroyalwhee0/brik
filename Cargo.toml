@@ -16,18 +16,16 @@ edition = "2018"
 name = "kuchikiki"
 
 [lints.rust]
-# Forbid unsafe code when the unsafe feature is disabled (safe mode).
-# When the unsafe feature is enabled (default), unsafe code is allowed for performance.
+# Unsafe code policy:
+# - Default: unsafe code is allowed for performance
+# - With 'safe' feature: all unsafe blocks are disabled via cfg
 #
-# To build without unsafe code: cargo build --no-default-features
-# To test without unsafe code: cargo test --no-default-features
+# To build with safe mode: cargo build --features safe
+# To test with safe mode: cargo test --features safe
 #
-# This lint is automatically enabled when building without the unsafe feature.
-# When the unsafe feature is enabled, the safe alternatives are not compiled.
-#
-# Note: This lint cannot be conditionally set via #[cfg] in Cargo.toml directly,
-# but the unsafe blocks are already wrapped with #[cfg(feature = "unsafe")],
-# so building without the unsafe feature will have zero unsafe blocks.
+# Note: This only affects kuchikiki's code. Dependencies may still contain unsafe code.
+# The unsafe blocks are wrapped with #[cfg(not(feature = "safe"))], so enabling
+# the 'safe' feature results in zero unsafe blocks in kuchikiki.
 missing_docs = "deny"
 
 [lints.rustdoc]
@@ -67,7 +65,9 @@ precomputed-hash = "0.1.1"
 # Enable bloom filter optimization for faster selector matching.
 bloom-filter = []
 
-# Enable unsafe code optimizations (default). When disabled, uses safe alternatives.
-# Disabling this feature allows the code to be built with forbid(unsafe_code).
-default = ["unsafe"]
-unsafe = []
+# Enable safe mode (no unsafe code in kuchikiki). When enabled, uses safe alternatives.
+# Safe mode allows kuchikiki to be built without any unsafe blocks.
+# Note: This only affects kuchikiki's code, not its dependencies.
+# Default: unsafe mode (for performance)
+# To enable safe mode: cargo build --features safe
+safe = []

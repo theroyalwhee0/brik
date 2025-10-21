@@ -3,11 +3,11 @@ use std::cell::RefCell;
 use std::fmt;
 use std::ops::Deref;
 
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 use std::marker::PhantomData;
 
 /// Discriminant for the type of node data being referenced (safe mode only).
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NodeDataKind {
@@ -61,13 +61,13 @@ pub struct NodeDataRef<T> {
     /// Keeps the node alive while this reference exists.
     _keep_alive: NodeRef,
     /// Raw pointer to the data within the node (unsafe mode).
-    #[cfg(feature = "unsafe")]
+    #[cfg(not(feature = "safe"))]
     _reference: *const T,
     /// Node data kind discriminant (safe mode).
-    #[cfg(not(feature = "unsafe"))]
+    #[cfg(feature = "safe")]
     _kind: NodeDataKind,
     /// Phantom data to maintain generic parameter (safe mode).
-    #[cfg(not(feature = "unsafe"))]
+    #[cfg(feature = "safe")]
     _phantom: PhantomData<T>,
 }
 
@@ -78,14 +78,14 @@ impl<T> NodeDataRef<T> {
     where
         F: FnOnce(&Node) -> &T,
     {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             NodeDataRef {
                 _reference: f(&rc),
                 _keep_alive: rc,
             }
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             // Determine the node kind. Since every node must be one of the 5 types,
             // this should always succeed. The unreachable!() documents a logic bug.
@@ -122,14 +122,14 @@ impl<T> NodeDataRef<T> {
     where
         F: FnOnce(&Node) -> Option<&T>,
     {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             f(&rc).map(|r| r as *const T).map(move |r| NodeDataRef {
                 _reference: r,
                 _keep_alive: rc,
             })
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             // Determine the node kind by checking which variant matches.
             // This is safe because we're only storing the discriminant, not the pointer.
@@ -168,7 +168,7 @@ impl<T> NodeDataRef<T> {
 }
 
 // Generic Deref implementation for unsafe mode.
-#[cfg(feature = "unsafe")]
+#[cfg(not(feature = "safe"))]
 impl<T> Deref for NodeDataRef<T> {
     type Target = T;
     #[inline]
@@ -178,7 +178,7 @@ impl<T> Deref for NodeDataRef<T> {
 }
 
 // Specialized Deref implementations for safe mode.
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl Deref for NodeDataRef<ElementData> {
     type Target = ElementData;
     #[inline]
@@ -187,7 +187,7 @@ impl Deref for NodeDataRef<ElementData> {
     }
 }
 
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl Deref for NodeDataRef<RefCell<String>> {
     type Target = RefCell<String>;
     #[inline]
@@ -200,7 +200,7 @@ impl Deref for NodeDataRef<RefCell<String>> {
     }
 }
 
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl Deref for NodeDataRef<Doctype> {
     type Target = Doctype;
     #[inline]
@@ -209,7 +209,7 @@ impl Deref for NodeDataRef<Doctype> {
     }
 }
 
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl Deref for NodeDataRef<DocumentData> {
     type Target = DocumentData;
     #[inline]
@@ -230,14 +230,14 @@ impl<T> PartialEq for NodeDataRef<T> {
 impl<T> Clone for NodeDataRef<T> {
     #[inline]
     fn clone(&self) -> Self {
-        #[cfg(feature = "unsafe")]
+        #[cfg(not(feature = "safe"))]
         {
             NodeDataRef {
                 _keep_alive: self._keep_alive.clone(),
                 _reference: self._reference,
             }
         }
-        #[cfg(not(feature = "unsafe"))]
+        #[cfg(feature = "safe")]
         {
             NodeDataRef {
                 _keep_alive: self._keep_alive.clone(),
@@ -249,7 +249,7 @@ impl<T> Clone for NodeDataRef<T> {
 }
 
 // Generic Debug implementation for unsafe mode.
-#[cfg(feature = "unsafe")]
+#[cfg(not(feature = "safe"))]
 impl<T: fmt::Debug> fmt::Debug for NodeDataRef<T> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -258,7 +258,7 @@ impl<T: fmt::Debug> fmt::Debug for NodeDataRef<T> {
 }
 
 // Specialized Debug implementations for safe mode.
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<ElementData> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -266,7 +266,7 @@ impl fmt::Debug for NodeDataRef<ElementData> {
     }
 }
 
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<RefCell<String>> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -274,7 +274,7 @@ impl fmt::Debug for NodeDataRef<RefCell<String>> {
     }
 }
 
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<Doctype> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -282,7 +282,7 @@ impl fmt::Debug for NodeDataRef<Doctype> {
     }
 }
 
-#[cfg(not(feature = "unsafe"))]
+#[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<DocumentData> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
