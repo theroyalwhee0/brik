@@ -28,9 +28,7 @@ pub struct KuchikiSelectors;
 impl SelectorImpl for KuchikiSelectors {
     type AttrValue = String;
     type Identifier = LocalName;
-    type ClassName = LocalName;
     type LocalName = LocalName;
-    type PartName = LocalName;
     type NamespacePrefix = LocalName;
     type NamespaceUrl = Namespace;
     type BorrowedNamespaceUrl = Namespace;
@@ -110,10 +108,6 @@ impl NonTSPseudoClass for PseudoClass {
             *self,
             PseudoClass::Active | PseudoClass::Hover | PseudoClass::Focus
         )
-    }
-
-    fn has_zero_specificity(&self) -> bool {
-        false
     }
 }
 
@@ -221,11 +215,6 @@ impl selectors::Element for NodeDataRef<ElementData> {
     #[inline]
     fn is_part(&self, _name: &LocalName) -> bool {
         false
-    }
-
-    #[inline]
-    fn exported_part(&self, _: &LocalName) -> Option<LocalName> {
-        None
     }
 
     #[inline]
