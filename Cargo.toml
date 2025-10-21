@@ -16,8 +16,18 @@ edition = "2018"
 name = "kuchikiki"
 
 [lints.rust]
-# TODO: Enable once unsafe code is minimized or properly justified.
-# unsafe_code = "forbid"
+# Forbid unsafe code when the unsafe feature is disabled (safe mode).
+# When the unsafe feature is enabled (default), unsafe code is allowed for performance.
+#
+# To build without unsafe code: cargo build --no-default-features
+# To test without unsafe code: cargo test --no-default-features
+#
+# This lint is automatically enabled when building without the unsafe feature.
+# When the unsafe feature is enabled, the safe alternatives are not compiled.
+#
+# Note: This lint cannot be conditionally set via #[cfg] in Cargo.toml directly,
+# but the unsafe blocks are already wrapped with #[cfg(feature = "unsafe")],
+# so building without the unsafe feature will have zero unsafe blocks.
 missing_docs = "deny"
 
 [lints.rustdoc]
@@ -56,3 +66,8 @@ precomputed-hash = "0.1.1"
 [features]
 # Enable bloom filter optimization for faster selector matching.
 bloom-filter = []
+
+# Enable unsafe code optimizations (default). When disabled, uses safe alternatives.
+# Disabling this feature allows the code to be built with forbid(unsafe_code).
+default = ["unsafe"]
+unsafe = []

@@ -70,7 +70,17 @@ pub trait CellOption {
 impl<T> CellOption for Cell<Option<T>> {
     #[inline]
     fn is_none(&self) -> bool {
-        unsafe { (*self.as_ptr()).is_none() }
+        #[cfg(feature = "unsafe")]
+        {
+            unsafe { (*self.as_ptr()).is_none() }
+        }
+        #[cfg(not(feature = "unsafe"))]
+        {
+            let value = self.take();
+            let result = value.is_none();
+            self.set(value);
+            result
+        }
     }
 }
 
@@ -85,12 +95,32 @@ pub trait CellOptionWeak<T> {
 impl<T> CellOptionWeak<T> for Cell<Option<Weak<T>>> {
     #[inline]
     fn upgrade(&self) -> Option<Rc<T>> {
-        unsafe { (*self.as_ptr()).as_ref().and_then(Weak::upgrade) }
+        #[cfg(feature = "unsafe")]
+        {
+            unsafe { (*self.as_ptr()).as_ref().and_then(Weak::upgrade) }
+        }
+        #[cfg(not(feature = "unsafe"))]
+        {
+            let value = self.take();
+            let result = value.as_ref().and_then(Weak::upgrade);
+            self.set(value);
+            result
+        }
     }
 
     #[inline]
     fn clone_inner(&self) -> Option<Weak<T>> {
-        unsafe { (*self.as_ptr()).clone() }
+        #[cfg(feature = "unsafe")]
+        {
+            unsafe { (*self.as_ptr()).clone() }
+        }
+        #[cfg(not(feature = "unsafe"))]
+        {
+            let value = self.take();
+            let result = value.clone();
+            self.set(value);
+            result
+        }
     }
 }
 
@@ -106,19 +136,45 @@ pub trait CellOptionRc<T> {
 impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
     #[inline]
     fn take_if_unique_strong(&self) -> Option<Rc<T>> {
-        unsafe {
-            match *self.as_ptr() {
-                None => None,
-                Some(ref rc) if Rc::strong_count(rc) > 1 => None,
-                // Not borrowing the `Rc<T>` here
-                // as we would be invalidating that borrow while it is outstanding:
-                Some(_) => self.take(),
+        #[cfg(feature = "unsafe")]
+        {
+            unsafe {
+                match *self.as_ptr() {
+                    None => None,
+                    Some(ref rc) if Rc::strong_count(rc) > 1 => None,
+                    // Not borrowing the `Rc<T>` here
+                    // as we would be invalidating that borrow while it is outstanding:
+                    Some(_) => self.take(),
+                }
             }
+        }
+        #[cfg(not(feature = "unsafe"))]
+        {
+            let value = self.take();
+            let result = match value {
+                None => None,
+                Some(ref rc) if Rc::strong_count(rc) > 1 => {
+                    self.set(value);
+                    None
+                }
+                Some(rc) => Some(rc),
+            };
+            result
         }
     }
 
     #[inline]
     fn clone_inner(&self) -> Option<Rc<T>> {
-        unsafe { (*self.as_ptr()).clone() }
+        #[cfg(feature = "unsafe")]
+        {
+            unsafe { (*self.as_ptr()).clone() }
+        }
+        #[cfg(not(feature = "unsafe"))]
+        {
+            let value = self.take();
+            let result = value.clone();
+            self.set(value);
+            result
+        }
     }
 }
