@@ -17,8 +17,7 @@ name = "kuchikiki"
 [lints.rust]
 # TODO: Enable once unsafe code is minimized or properly justified.
 # unsafe_code = "forbid"
-# TODO: Enable once all public APIs are documented.
-# missing_docs = "deny"
+missing_docs = "deny"
 
 [lints.rustdoc]
 missing_crate_level_docs = "deny"
@@ -37,16 +36,21 @@ missing_panics_doc = "deny"
 missing_errors_doc = "deny"
 missing_safety_doc = "deny"
 
-[features]
-# Enable bloom filter optimization for faster selector matching.
-bloom-filter = []
+[dev-dependencies]
+tempfile = "3.23.0"
 
 [dependencies]
-cssparser = "0.35.0"
+# HTML parsing.
 html5ever = "0.35.0"
+
+# CSS selector parsing and matching.
+cssparser = "0.35.0"
 selectors = "0.32.0"
+
+# Data structures.
 indexmap = "2.12.0"
 precomputed-hash = "0.1.1"
 
-[dev-dependencies]
-tempfile = "3.23.0"
+[features]
+# Enable bloom filter optimization for faster selector matching.
+bloom-filter = []
