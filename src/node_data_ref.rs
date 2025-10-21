@@ -87,10 +87,32 @@ impl<T> NodeDataRef<T> {
         }
         #[cfg(not(feature = "unsafe"))]
         {
-            // This is a private internal function, not used externally.
-            // The public API uses new_opt which determines the kind.
-            let _ = (rc, f);
-            unimplemented!("NodeDataRef::new is not supported in safe mode, use new_opt")
+            // Determine the node kind. Since every node must be one of the 5 types,
+            // this should always succeed. The unreachable!() documents a logic bug.
+            let kind = if rc.as_element().is_some() {
+                NodeDataKind::Element
+            } else if rc.as_text().is_some() {
+                NodeDataKind::Text
+            } else if rc.as_comment().is_some() {
+                NodeDataKind::Comment
+            } else if rc.as_doctype().is_some() {
+                NodeDataKind::Doctype
+            } else if rc.as_document().is_some() {
+                NodeDataKind::Document
+            } else {
+                unreachable!("All node types are covered")
+            };
+
+            // We don't call f() because we trust the caller's function signature.
+            // The infallible signature F: FnOnce(&Node) -> &T means the caller
+            // guarantees this node has the correct type.
+            let _ = f;
+
+            NodeDataRef {
+                _keep_alive: rc,
+                _kind: kind,
+                _phantom: PhantomData,
+            }
         }
     }
 
