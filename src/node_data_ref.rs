@@ -8,19 +8,22 @@ use std::marker::PhantomData;
 
 /// Discriminant for the type of node data being referenced (safe mode only).
 #[cfg(feature = "safe")]
-#[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum NodeDataKind {
     /// Element node.
-    Element = 0,
+    Element,
     /// Text node.
-    Text = 1,
+    Text,
     /// Comment node.
-    Comment = 2,
+    Comment,
+    /// Processing instruction node.
+    ProcessingInstruction,
     /// Doctype node.
-    Doctype = 3,
+    Doctype,
     /// Document node.
-    Document = 4,
+    Document,
+    /// Document fragment node.
+    DocumentFragment,
 }
 
 impl NodeRef {
@@ -52,6 +55,18 @@ impl NodeRef {
     #[inline]
     pub fn into_document_ref(self) -> Option<NodeDataRef<DocumentData>> {
         NodeDataRef::new_opt(self, Node::as_document)
+    }
+
+    /// If this node is a processing instruction, return a strong reference to its contents.
+    #[inline]
+    pub fn into_processing_instruction_ref(self) -> Option<NodeDataRef<RefCell<(String, String)>>> {
+        NodeDataRef::new_opt(self, Node::as_processing_instruction)
+    }
+
+    /// If this node is a document fragment, return a strong reference to it.
+    #[inline]
+    pub fn into_document_fragment_ref(self) -> Option<NodeDataRef<()>> {
+        NodeDataRef::new_opt(self, Node::as_document_fragment)
     }
 }
 
@@ -87,26 +102,23 @@ impl<T> NodeDataRef<T> {
         }
         #[cfg(feature = "safe")]
         {
-            // Determine the node kind. Since every node must be one of the 5 types,
+            // Determine the node kind. Since every node must be one of the 7 types,
             // this should always succeed. The unreachable!() documents a logic bug.
-            let kind = if rc.as_element().is_some() {
-                NodeDataKind::Element
-            } else if rc.as_text().is_some() {
-                NodeDataKind::Text
-            } else if rc.as_comment().is_some() {
-                NodeDataKind::Comment
-            } else if rc.as_doctype().is_some() {
-                NodeDataKind::Doctype
-            } else if rc.as_document().is_some() {
-                NodeDataKind::Document
-            } else {
-                unreachable!("All node types are covered")
+            let kind = match &rc {
+                _ if rc.as_element().is_some() => NodeDataKind::Element,
+                _ if rc.as_text().is_some() => NodeDataKind::Text,
+                _ if rc.as_comment().is_some() => NodeDataKind::Comment,
+                _ if rc.as_processing_instruction().is_some() => NodeDataKind::ProcessingInstruction,
+                _ if rc.as_doctype().is_some() => NodeDataKind::Doctype,
+                _ if rc.as_document().is_some() => NodeDataKind::Document,
+                _ if rc.as_document_fragment().is_some() => NodeDataKind::DocumentFragment,
+                _ => unreachable!("All node types are covered"),
             };
 
             // We don't call f() because we trust the caller's function signature.
             // The infallible signature F: FnOnce(&Node) -> &T means the caller
             // guarantees this node has the correct type.
-            let _ = f;
+            drop(f);
 
             NodeDataRef {
                 _keep_alive: rc,
@@ -133,18 +145,15 @@ impl<T> NodeDataRef<T> {
         {
             // Determine the node kind by checking which variant matches.
             // This is safe because we're only storing the discriminant, not the pointer.
-            let kind = if rc.as_element().is_some() {
-                NodeDataKind::Element
-            } else if rc.as_text().is_some() {
-                NodeDataKind::Text
-            } else if rc.as_comment().is_some() {
-                NodeDataKind::Comment
-            } else if rc.as_doctype().is_some() {
-                NodeDataKind::Doctype
-            } else if rc.as_document().is_some() {
-                NodeDataKind::Document
-            } else {
-                return None;
+            let kind = match &rc {
+                _ if rc.as_element().is_some() => NodeDataKind::Element,
+                _ if rc.as_text().is_some() => NodeDataKind::Text,
+                _ if rc.as_comment().is_some() => NodeDataKind::Comment,
+                _ if rc.as_processing_instruction().is_some() => NodeDataKind::ProcessingInstruction,
+                _ if rc.as_doctype().is_some() => NodeDataKind::Doctype,
+                _ if rc.as_document().is_some() => NodeDataKind::Document,
+                _ if rc.as_document_fragment().is_some() => NodeDataKind::DocumentFragment,
+                _ => return None,
             };
 
             // Verify that f returns Some for this node.
@@ -218,6 +227,24 @@ impl Deref for NodeDataRef<DocumentData> {
     }
 }
 
+#[cfg(feature = "safe")]
+impl Deref for NodeDataRef<RefCell<(String, String)>> {
+    type Target = RefCell<(String, String)>;
+    #[inline]
+    fn deref(&self) -> &RefCell<(String, String)> {
+        self._keep_alive.as_processing_instruction().expect("NodeDataRef<RefCell<(String, String)>> must contain ProcessingInstruction")
+    }
+}
+
+#[cfg(feature = "safe")]
+impl Deref for NodeDataRef<()> {
+    type Target = ();
+    #[inline]
+    fn deref(&self) -> &() {
+        self._keep_alive.as_document_fragment().expect("NodeDataRef<()> must contain DocumentFragment")
+    }
+}
+
 // #[derive(PartialEq)] would compare both fields
 impl<T> PartialEq for NodeDataRef<T> {
     #[inline]
@@ -284,6 +311,22 @@ impl fmt::Debug for NodeDataRef<Doctype> {
 
 #[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<DocumentData> {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+#[cfg(feature = "safe")]
+impl fmt::Debug for NodeDataRef<RefCell<(String, String)>> {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        fmt::Debug::fmt(&**self, f)
+    }
+}
+
+#[cfg(feature = "safe")]
+impl fmt::Debug for NodeDataRef<()> {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         fmt::Debug::fmt(&**self, f)

@@ -341,6 +341,24 @@ impl Node {
         }
     }
 
+    /// If this node is a processing instruction, return a reference to its contents.
+    #[inline]
+    pub fn as_processing_instruction(&self) -> Option<&RefCell<(String, String)>> {
+        match self.data {
+            NodeData::ProcessingInstruction(ref value) => Some(value),
+            _ => None,
+        }
+    }
+
+    /// If this node is a document fragment, return a reference to the unit value.
+    #[inline]
+    pub fn as_document_fragment(&self) -> Option<&()> {
+        match self.data {
+            NodeData::DocumentFragment => Some(&()),
+            _ => None,
+        }
+    }
+
     /// Return a reference to the parent node, unless this node is the root of the tree.
     #[inline]
     pub fn parent(&self) -> Option<NodeRef> {
