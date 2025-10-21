@@ -5,10 +5,11 @@ authors = [
   "Brave Authors",
   "Ralph Giles <rgiles@brave.com>",
   "Simon Sapin <simon.sapin@exyr.org>",
+  "Adam Mill <hismajesty@theroyalwhee.com>",
 ]
 license = "MIT"
 description = "(口利き) HTML tree manipulation library"
-repository = "https://github.com/brave/kuchikiki"
+repository = "https://github.com/theroyalwhee0/kuchikiki"
 edition = "2018"
 
 [lib]
@@ -37,6 +38,7 @@ missing_errors_doc = "deny"
 missing_safety_doc = "deny"
 
 [dev-dependencies]
+# Testing.
 tempfile = "3.23.0"
 
 [dependencies]
