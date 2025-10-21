@@ -480,6 +480,10 @@ pub struct Specificity(u32);
 
 impl Selectors {
     /// Compile a list of selectors. This may fail on syntax errors or unsupported selectors.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(())` if the selector string contains syntax errors or unsupported selectors.
     #[inline]
     pub fn compile(s: &str) -> Result<Selectors, ()> {
         let mut input = cssparser::ParserInput::new(s);

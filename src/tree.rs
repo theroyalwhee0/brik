@@ -440,6 +440,10 @@ impl NodeRef {
     /// Insert a new sibling after this node.
     ///
     /// The new sibling is detached from its previous position.
+    ///
+    /// # Panics
+    ///
+    /// Panics in debug mode if internal tree invariants are violated.
     pub fn insert_after(&self, new_sibling: NodeRef) {
         new_sibling.detach();
         new_sibling.parent.replace(self.parent.clone_inner());
@@ -464,6 +468,10 @@ impl NodeRef {
     /// Insert a new sibling before this node.
     ///
     /// The new sibling is detached from its previous position.
+    ///
+    /// # Panics
+    ///
+    /// Panics in debug mode if internal tree invariants are violated.
     pub fn insert_before(&self, new_sibling: NodeRef) {
         new_sibling.detach();
         new_sibling.parent.replace(self.parent.clone_inner());

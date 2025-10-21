@@ -35,13 +35,12 @@ print_stderr = "deny"
 disallowed_methods = "deny"
 # TODO: Enable once all items have documentation.
 # missing_docs_in_private_items = "deny"
-# missing_panics_doc = "deny"
-# missing_errors_doc = "deny"
-# missing_safety_doc = "deny"
+missing_panics_doc = "deny"
+missing_errors_doc = "deny"
+missing_safety_doc = "deny"
 
 [features]
 # Enable bloom filter optimization for faster selector matching.
-# Recommended for applications doing heavy selector matching across many elements.
 bloom-filter = []
 
 [dependencies]
