@@ -26,6 +26,10 @@ impl NodeRef {
     }
 
     /// Return an iterator of references to this node and the siblings before it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node has a parent but that parent has no first child (internal tree inconsistency).
     #[inline]
     pub fn inclusive_preceding_siblings(&self) -> Rev<Siblings> {
         match self.parent() {
@@ -48,7 +52,11 @@ impl NodeRef {
         .rev()
     }
 
-    /// Return an iterator of references to this node’s siblings before it.
+    /// Return an iterator of references to this node's siblings before it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node has a parent but that parent has no first child (internal tree inconsistency).
     #[inline]
     pub fn preceding_siblings(&self) -> Rev<Siblings> {
         match (self.parent(), self.previous_sibling()) {
@@ -65,6 +73,10 @@ impl NodeRef {
     }
 
     /// Return an iterator of references to this node and the siblings after it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node has a parent but that parent has no last child (internal tree inconsistency).
     #[inline]
     pub fn inclusive_following_siblings(&self) -> Siblings {
         match self.parent() {
@@ -86,7 +98,11 @@ impl NodeRef {
         }
     }
 
-    /// Return an iterator of references to this node’s siblings after it.
+    /// Return an iterator of references to this node's siblings after it.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the node has a parent but that parent has no last child (internal tree inconsistency).
     #[inline]
     pub fn following_siblings(&self) -> Siblings {
         match (self.parent(), self.next_sibling()) {
@@ -159,12 +175,20 @@ impl NodeRef {
     }
 
     /// Return an iterator of the inclusive descendants element that match the given selector list.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(())` if the selector string fails to parse.
     #[inline]
     pub fn select(&self, selectors: &str) -> Result<Select<Elements<Descendants>>, ()> {
         self.inclusive_descendants().select(selectors)
     }
 
     /// Return the first inclusive descendants element that match the given selector list.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(())` if the selector string fails to parse or if no element matches.
     #[inline]
     pub fn select_first(&self, selectors: &str) -> Result<NodeDataRef<ElementData>, ()> {
         let mut elements = self.select(selectors)?;
@@ -172,9 +196,12 @@ impl NodeRef {
     }
 }
 
+/// Internal state for double-ended iterators.
 #[derive(Debug, Clone)]
 struct State<T> {
+    /// The next item to be returned from the front of the iterator.
     next: T,
+    /// The next item to be returned from the back of the iterator.
     next_back: T,
 }
 
@@ -182,6 +209,7 @@ struct State<T> {
 #[derive(Debug, Clone)]
 pub struct Siblings(Option<State<NodeRef>>);
 
+/// Macro to implement iterator methods for sibling traversal.
 macro_rules! siblings_next {
     ($next: ident, $next_back: ident, $next_sibling: ident) => {
         fn $next(&mut self) -> Option<NodeRef> {
@@ -234,6 +262,7 @@ impl Iterator for Ancestors {
 #[derive(Debug, Clone)]
 pub struct Descendants(Traverse);
 
+/// Macro to implement iterator methods for descendant traversal.
 macro_rules! descendants_next {
     ($next: ident) => {
         #[inline]
@@ -276,6 +305,7 @@ pub enum NodeEdge<T> {
 #[derive(Debug, Clone)]
 pub struct Traverse(Option<State<NodeEdge<NodeRef>>>);
 
+/// Macro to implement iterator methods for tree traversal with start/end edges.
 macro_rules! traverse_next {
     ($next: ident, $next_back: ident, $first_child: ident, $next_sibling: ident, $Start: ident, $End: ident) => {
         fn $next(&mut self) -> Option<NodeEdge<NodeRef>> {
@@ -325,6 +355,7 @@ impl DoubleEndedIterator for Traverse {
     traverse_next!(next_back, next, last_child, previous_sibling, End, Start);
 }
 
+/// Macro to create filter-map-like iterator wrappers.
 macro_rules! filter_map_like_iterator {
     (#[$doc: meta] $name: ident: $f: expr, $from: ty => $to: ty) => {
         #[$doc]
@@ -445,6 +476,10 @@ pub trait NodeIterator: Sized + Iterator<Item = NodeRef> {
     }
 
     /// Filter this node iterator to elements maching the given selectors.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(())` if the selector string fails to parse.
     #[inline]
     fn select(self, selectors: &str) -> Result<Select<Elements<Self>>, ()> {
         self.elements().select(selectors)
@@ -454,6 +489,10 @@ pub trait NodeIterator: Sized + Iterator<Item = NodeRef> {
 /// Convenience methods for element iterators.
 pub trait ElementIterator: Sized + Iterator<Item = NodeDataRef<ElementData>> {
     /// Filter this element iterator to elements maching the given selectors.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(())` if the selector string fails to parse.
     #[inline]
     fn select(self, selectors: &str) -> Result<Select<Self>, ()> {
         Selectors::compile(selectors).map(|s| Select {

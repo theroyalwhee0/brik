@@ -60,11 +60,14 @@ pub fn parse_fragment_with_options(
     html5ever::parse_fragment(sink, html5opts, ctx_name, ctx_attr, false)
 }
 
+/// Type alias for the parse error callback handler.
 type ParseErrorHandler = RefCell<Option<Box<dyn FnMut(Cow<'static, str>)>>>;
 
 /// Receives new tree nodes during parsing.
 pub struct Sink {
+    /// The root document node being constructed.
     document_node: NodeRef,
+    /// Optional callback for handling parse errors.
     on_parse_error: ParseErrorHandler,
 }
 

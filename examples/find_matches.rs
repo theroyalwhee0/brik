@@ -1,3 +1,7 @@
+//! Example demonstrating how to find and extract text from elements matching a CSS selector.
+
+#![allow(clippy::print_stdout)]
+
 use kuchikiki::traits::*;
 
 fn main() {

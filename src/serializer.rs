@@ -90,6 +90,10 @@ impl fmt::Display for NodeRef {
 
 impl NodeRef {
     /// Serialize this node and its descendants in HTML syntax to the given stream.
+    ///
+    /// # Errors
+    ///
+    /// Returns an `io::Error` if writing to the stream fails.
     #[inline]
     pub fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         serialize(
@@ -103,6 +107,10 @@ impl NodeRef {
     }
 
     /// Serialize this node and its descendants in HTML syntax to a new file at the given path.
+    ///
+    /// # Errors
+    ///
+    /// Returns an `io::Error` if the file cannot be created or if writing fails.
     #[inline]
     pub fn serialize_to_file<P: AsRef<Path>>(&self, path: P) -> io::Result<()> {
         let mut file = File::create(&path)?;

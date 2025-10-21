@@ -115,11 +115,17 @@ impl PartialEq for NodeRef {
 
 /// A node inside a DOM-like tree.
 pub struct Node {
+    /// Weak reference to the parent node.
     parent: Cell<Option<Weak<Node>>>,
+    /// Weak reference to the previous sibling.
     previous_sibling: Cell<Option<Weak<Node>>>,
+    /// Strong reference to the next sibling.
     next_sibling: Cell<Option<Rc<Node>>>,
+    /// Strong reference to the first child.
     first_child: Cell<Option<Rc<Node>>>,
+    /// Weak reference to the last child.
     last_child: Cell<Option<Weak<Node>>>,
+    /// The data contained in this node.
     data: NodeData,
 }
 
@@ -440,6 +446,10 @@ impl NodeRef {
     /// Insert a new sibling after this node.
     ///
     /// The new sibling is detached from its previous position.
+    ///
+    /// # Panics
+    ///
+    /// Panics in debug mode if internal tree invariants are violated.
     pub fn insert_after(&self, new_sibling: NodeRef) {
         new_sibling.detach();
         new_sibling.parent.replace(self.parent.clone_inner());
@@ -464,6 +474,10 @@ impl NodeRef {
     /// Insert a new sibling before this node.
     ///
     /// The new sibling is detached from its previous position.
+    ///
+    /// # Panics
+    ///
+    /// Panics in debug mode if internal tree invariants are violated.
     pub fn insert_before(&self, new_sibling: NodeRef) {
         new_sibling.detach();
         new_sibling.parent.replace(self.parent.clone_inner());

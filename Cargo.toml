@@ -5,26 +5,54 @@ authors = [
   "Brave Authors",
   "Ralph Giles <rgiles@brave.com>",
   "Simon Sapin <simon.sapin@exyr.org>",
+  "Adam Mill <hismajesty@theroyalwhee.com>",
 ]
 license = "MIT"
 description = "(口利き) HTML tree manipulation library"
-repository = "https://github.com/brave/kuchikiki"
+repository = "https://github.com/theroyalwhee0/kuchikiki"
 edition = "2018"
 
 [lib]
 name = "kuchikiki"
 
-[features]
-# Enable bloom filter optimization for faster selector matching.
-# Recommended for applications doing heavy selector matching across many elements.
-bloom-filter = []
+[lints.rust]
+# TODO: Enable once unsafe code is minimized or properly justified.
+# unsafe_code = "forbid"
+missing_docs = "deny"
+
+[lints.rustdoc]
+missing_crate_level_docs = "deny"
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "deny"
+invalid_codeblock_attributes = "deny"
+bare_urls = "deny"
+redundant_explicit_links = "deny"
+
+[lints.clippy]
+print_stdout = "deny"
+print_stderr = "deny"
+disallowed_methods = "deny"
+missing_docs_in_private_items = "deny"
+missing_panics_doc = "deny"
+missing_errors_doc = "deny"
+missing_safety_doc = "deny"
+
+[dev-dependencies]
+# Testing.
+tempfile = "3.23.0"
 
 [dependencies]
-cssparser = "0.35.0"
+# HTML parsing.
 html5ever = "0.35.0"
+
+# CSS selector parsing and matching.
+cssparser = "0.35.0"
 selectors = "0.32.0"
+
+# Data structures.
 indexmap = "2.12.0"
 precomputed-hash = "0.1.1"
 
-[dev-dependencies]
-tempfile = "3.23.0"
+[features]
+# Enable bloom filter optimization for faster selector matching.
+bloom-filter = []

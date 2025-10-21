@@ -1,3 +1,7 @@
+//! Example demonstrating that node dropping doesn't cause stack overflow with deep trees.
+
+#![allow(clippy::print_stdout)]
+
 fn main() {
     let mut depth = 2;
     // 20 M nodes is a few GB of memory.

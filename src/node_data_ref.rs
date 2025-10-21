@@ -38,7 +38,9 @@ impl NodeRef {
 /// Holds a strong reference to a node, but dereferences to some component inside of it.
 #[derive(Eq)]
 pub struct NodeDataRef<T> {
+    /// Keeps the node alive while this reference exists.
     _keep_alive: NodeRef,
+    /// Raw pointer to the data within the node.
     _reference: *const T,
 }
 
