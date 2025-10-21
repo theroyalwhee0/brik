@@ -8,6 +8,7 @@ use crate::node_data_ref::NodeDataRef;
 use crate::tree::{ElementData, Node, NodeData, NodeRef};
 use cssparser::{self, CowRcStr, ParseError, SourceLocation, ToCss};
 use html5ever::{LocalName, Namespace};
+use precomputed_hash::PrecomputedHash;
 use selectors::attr::{AttrSelectorOperation, CaseSensitivity, NamespaceConstraint};
 use selectors::context::QuirksMode;
 use selectors::parser::SelectorParseErrorKind;
@@ -15,23 +16,117 @@ use selectors::parser::{
     NonTSPseudoClass, Parser, Selector as GenericSelector, SelectorImpl, SelectorList,
 };
 use selectors::{self, matching, OpaqueElement};
+use std::borrow::Borrow;
 use std::fmt;
+use std::ops::Deref;
 
 /// The definition of whitespace per CSS Selectors Level 3 § 4.
 ///
 /// Copied from rust-selectors.
 static SELECTOR_WHITESPACE: &[char] = &[' ', '\t', '\n', '\r', '\x0C'];
 
+/// Wrapper for String that implements ToCss
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct AttrValue(String);
+
+impl ToCss for AttrValue {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        cssparser::serialize_string(&self.0, dest)
+    }
+}
+
+impl From<String> for AttrValue {
+    fn from(s: String) -> Self {
+        AttrValue(s)
+    }
+}
+
+impl<'a> From<&'a str> for AttrValue {
+    fn from(s: &'a str) -> Self {
+        AttrValue(s.to_string())
+    }
+}
+
+impl Deref for AttrValue {
+    type Target = String;
+    fn deref(&self) -> &String {
+        &self.0
+    }
+}
+
+impl Borrow<str> for AttrValue {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
+
+impl AsRef<str> for AttrValue {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+/// Wrapper for LocalName that implements ToCss
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Default)]
+pub struct LocalNameSelector(LocalName);
+
+impl ToCss for LocalNameSelector {
+    fn to_css<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        cssparser::serialize_identifier(&self.0, dest)
+    }
+}
+
+impl From<LocalName> for LocalNameSelector {
+    fn from(name: LocalName) -> Self {
+        LocalNameSelector(name)
+    }
+}
+
+impl<'a> From<&'a str> for LocalNameSelector {
+    fn from(s: &'a str) -> Self {
+        LocalNameSelector(LocalName::from(s))
+    }
+}
+
+impl Deref for LocalNameSelector {
+    type Target = LocalName;
+    fn deref(&self) -> &LocalName {
+        &self.0
+    }
+}
+
+impl Borrow<LocalName> for LocalNameSelector {
+    fn borrow(&self) -> &LocalName {
+        &self.0
+    }
+}
+
+impl AsRef<LocalName> for LocalNameSelector {
+    fn as_ref(&self) -> &LocalName {
+        &self.0
+    }
+}
+
+impl PrecomputedHash for LocalNameSelector {
+    fn precomputed_hash(&self) -> u32 {
+        self.0.precomputed_hash()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct KuchikiSelectors;
 
 impl SelectorImpl for KuchikiSelectors {
-    type AttrValue = String;
-    type Identifier = LocalName;
-    type ClassName = LocalName;
-    type LocalName = LocalName;
-    type PartName = LocalName;
-    type NamespacePrefix = LocalName;
+    type AttrValue = AttrValue;
+    type Identifier = LocalNameSelector;
+    type LocalName = LocalNameSelector;
+    type NamespacePrefix = LocalNameSelector;
     type NamespaceUrl = Namespace;
     type BorrowedNamespaceUrl = Namespace;
     type BorrowedLocalName = LocalName;
@@ -39,7 +134,7 @@ impl SelectorImpl for KuchikiSelectors {
     type NonTSPseudoClass = PseudoClass;
     type PseudoElement = PseudoElement;
 
-    type ExtraMatchingData = ();
+    type ExtraMatchingData<'a> = ();
 }
 
 struct KuchikiParser;
@@ -110,10 +205,6 @@ impl NonTSPseudoClass for PseudoClass {
             *self,
             PseudoClass::Active | PseudoClass::Hover | PseudoClass::Focus
         )
-    }
-
-    fn has_zero_specificity(&self) -> bool {
-        false
     }
 }
 
@@ -188,6 +279,10 @@ impl selectors::Element for NodeDataRef<ElementData> {
         self.as_node().following_siblings().elements().next()
     }
     #[inline]
+    fn first_element_child(&self) -> Option<Self> {
+        self.as_node().children().elements().next()
+    }
+    #[inline]
     fn is_empty(&self) -> bool {
         self.as_node().children().all(|child| match *child.data() {
             NodeData::Element(_) => false,
@@ -219,17 +314,12 @@ impl selectors::Element for NodeDataRef<ElementData> {
     }
 
     #[inline]
-    fn is_part(&self, _name: &LocalName) -> bool {
+    fn is_part(&self, _name: &LocalNameSelector) -> bool {
         false
     }
 
     #[inline]
-    fn exported_part(&self, _: &LocalName) -> Option<LocalName> {
-        None
-    }
-
-    #[inline]
-    fn imported_part(&self, _: &LocalName) -> Option<LocalName> {
+    fn imported_part(&self, _: &LocalNameSelector) -> Option<LocalNameSelector> {
         None
     }
 
@@ -258,17 +348,17 @@ impl selectors::Element for NodeDataRef<ElementData> {
     }
 
     #[inline]
-    fn has_id(&self, id: &LocalName, case_sensitivity: CaseSensitivity) -> bool {
+    fn has_id(&self, id: &LocalNameSelector, case_sensitivity: CaseSensitivity) -> bool {
         self.attributes
             .borrow()
             .get(local_name!("id"))
-            .map_or(false, |id_attr| {
+            .is_some_and(|id_attr| {
                 case_sensitivity.eq(id.as_bytes(), id_attr.as_bytes())
             })
     }
 
     #[inline]
-    fn has_class(&self, name: &LocalName, case_sensitivity: CaseSensitivity) -> bool {
+    fn has_class(&self, name: &LocalNameSelector, case_sensitivity: CaseSensitivity) -> bool {
         let name = name.as_bytes();
         !name.is_empty()
             && if let Some(class_attr) = self.attributes.borrow().get(local_name!("class")) {
@@ -284,19 +374,19 @@ impl selectors::Element for NodeDataRef<ElementData> {
     fn attr_matches(
         &self,
         ns: &NamespaceConstraint<&Namespace>,
-        local_name: &LocalName,
-        operation: &AttrSelectorOperation<&String>,
+        local_name: &LocalNameSelector,
+        operation: &AttrSelectorOperation<&AttrValue>,
     ) -> bool {
         let attrs = self.attributes.borrow();
         match *ns {
             NamespaceConstraint::Any => attrs
                 .map
                 .iter()
-                .any(|(name, attr)| name.local == *local_name && operation.eval_str(&attr.value)),
+                .any(|(name, attr)| name.local == **local_name && operation.eval_str(attr.value.as_str())),
             NamespaceConstraint::Specific(ns_url) => attrs
                 .map
-                .get(&ExpandedName::new(ns_url, local_name.clone()))
-                .map_or(false, |attr| operation.eval_str(&attr.value)),
+                .get(&ExpandedName::new(ns_url, (**local_name).clone()))
+                .is_some_and(|attr| operation.eval_str(attr.value.as_str())),
         }
     }
 
@@ -308,15 +398,11 @@ impl selectors::Element for NodeDataRef<ElementData> {
         match *pseudo {}
     }
 
-    fn match_non_ts_pseudo_class<F>(
+    fn match_non_ts_pseudo_class(
         &self,
         pseudo: &PseudoClass,
         _context: &mut matching::MatchingContext<KuchikiSelectors>,
-        _flags_setter: &mut F,
-    ) -> bool
-    where
-        F: FnMut(&Self, matching::ElementSelectorFlags),
-    {
+    ) -> bool {
         use self::PseudoClass::*;
         match *pseudo {
             Active | Focus | Hover | Enabled | Disabled | Checked | Indeterminate | Visited => {
@@ -331,6 +417,23 @@ impl selectors::Element for NodeDataRef<ElementData> {
                     && self.attributes.borrow().contains(local_name!("href"))
             }
         }
+    }
+
+    #[inline]
+    fn apply_selector_flags(&self, _flags: matching::ElementSelectorFlags) {
+        // No-op for static DOM
+    }
+
+    #[inline]
+    fn has_custom_state(&self, _name: &LocalNameSelector) -> bool {
+        // kuchikiki is a static DOM, no custom states
+        false
+    }
+
+    #[inline]
+    fn add_element_unique_hashes(&self, _filter: &mut selectors::bloom::BloomFilter) -> bool {
+        // No bloom filter optimization
+        false
     }
 }
 
@@ -354,8 +457,8 @@ impl Selectors {
     #[inline]
     pub fn compile(s: &str) -> Result<Selectors, ()> {
         let mut input = cssparser::ParserInput::new(s);
-        match SelectorList::parse(&KuchikiParser, &mut cssparser::Parser::new(&mut input)) {
-            Ok(list) => Ok(Selectors(list.0.into_iter().map(Selector).collect())),
+        match SelectorList::parse(&KuchikiParser, &mut cssparser::Parser::new(&mut input), selectors::parser::ParseRelative::No) {
+            Ok(list) => Ok(Selectors(list.slice().iter().cloned().map(Selector).collect())),
             Err(_) => Err(()),
         }
     }
@@ -383,13 +486,16 @@ impl Selector {
     /// Returns whether the given element matches this selector.
     #[inline]
     pub fn matches(&self, element: &NodeDataRef<ElementData>) -> bool {
+        let mut selector_caches = matching::SelectorCaches::default();
         let mut context = matching::MatchingContext::new(
             matching::MatchingMode::Normal,
             None,
-            None,
+            &mut selector_caches,
             QuirksMode::NoQuirks,
+            matching::NeedsSelectorFlags::No,
+            matching::MatchingForInvalidation::No,
         );
-        matching::matches_selector(&self.0, 0, None, element, &mut context, &mut |_, _| {})
+        matching::matches_selector(&self.0, 0, None, element, &mut context)
     }
 
     /// Return the specificity of this selector.
