@@ -1,5 +1,9 @@
 # Project Coding Standards
 
+## Communication
+
+- **Time estimates**: Don't include time estimates unless explicitly requested
+
 ## Documentation Standards
 
 - **Comprehensive coverage**: All public items should be documented
