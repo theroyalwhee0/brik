@@ -1,19 +1,19 @@
 [package]
-name = "kuchikiki"
+name = "brik"
 version = "0.8.2"
 authors = [
+  "Adam Mill <hismajesty@theroyalwhee.com>",
   "Brave Authors",
   "Ralph Giles <rgiles@brave.com>",
   "Simon Sapin <simon.sapin@exyr.org>",
-  "Adam Mill <hismajesty@theroyalwhee.com>",
 ]
 license = "MIT"
-description = "(口利き) HTML tree manipulation library"
-repository = "https://github.com/theroyalwhee0/kuchikiki"
+description = "HTML tree manipulation library - a building block for HTML parsing and manipulation"
+repository = "https://github.com/theroyalwhee0/brik"
 edition = "2018"
 
 [lib]
-name = "kuchikiki"
+name = "brik"
 
 [lints.rust]
 # Unsafe code policy:
@@ -23,9 +23,9 @@ name = "kuchikiki"
 # To build with safe mode: cargo build --features safe
 # To test with safe mode: cargo test --features safe
 #
-# Note: This only affects kuchikiki's code. Dependencies may still contain unsafe code.
+# Note: This only affects brik's code. Dependencies may still contain unsafe code.
 # The unsafe blocks are wrapped with #[cfg(not(feature = "safe"))], so enabling
-# the 'safe' feature results in zero unsafe blocks in kuchikiki.
+# the 'safe' feature results in zero unsafe blocks in brik.
 missing_docs = "deny"
 
 [lints.rustdoc]
@@ -65,9 +65,9 @@ precomputed-hash = "0.1.1"
 # Enable bloom filter optimization for faster selector matching.
 bloom-filter = []
 
-# Enable safe mode (no unsafe code in kuchikiki). When enabled, uses safe alternatives.
-# Safe mode allows kuchikiki to be built without any unsafe blocks.
-# Note: This only affects kuchikiki's code, not its dependencies.
+# Enable safe mode (no unsafe code in brik). When enabled, uses safe alternatives.
+# Safe mode allows brik to be built without any unsafe blocks.
+# Note: This only affects brik's code, not its dependencies.
 # Default: unsafe mode (for performance)
 # To enable safe mode: cargo build --features safe
 safe = []

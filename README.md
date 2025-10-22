@@ -1,16 +1,16 @@
-# Kuchikiki (口利き)
+# Brik
 
-[![Documentation](https://docs.rs/kuchikiki/badge.svg)](https://docs.rs/kuchikiki)
-[![Crates.io](https://img.shields.io/crates/v/kuchikiki.svg)](https://crates.io/crates/kuchikiki)
-[![License](https://img.shields.io/crates/l/kuchikiki.svg)](https://github.com/theroyalwhee0/kuchikiki/blob/main/LICENSE)
+[![Documentation](https://docs.rs/brik/badge.svg)](https://docs.rs/brik)
+[![Crates.io](https://img.shields.io/crates/v/brik.svg)](https://crates.io/crates/brik)
+[![License](https://img.shields.io/crates/l/brik.svg)](https://github.com/theroyalwhee0/brik/blob/main/LICENSE)
 
 A Rust library for parsing, manipulating, and querying HTML documents using CSS selectors.
 
 ## About
 
-This is a fork of the [Kuchiki (朽木)](https://github.com/kuchiki-rs/kuchiki) library, which is now unmaintained. The Brave project continues to maintain this fork as an active, supported alternative.
+This is a fork of the [Kuchiki (朽木)](https://github.com/kuchiki-rs/kuchiki) library, which is now unmaintained.
 
-**Kuchikiki** means "intermediary" or "mediation" in Japanese (口利き), reflecting its role in bridging HTML parsing and manipulation.
+**Brik** is a building block for HTML manipulation - simple, solid, and stackable.
 
 ## Features
 
@@ -28,29 +28,30 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-kuchikiki = "0.8"
+brik = "0.8"
 ```
 
 ### Migrating from Kuchiki
 
-If you're migrating from the original `kuchiki` crate, update your `Cargo.toml` (add an extra `ki`!):
+If you're migrating from the original `kuchiki` crate:
 
 ```toml
 [dependencies]
-kuchikiki = "0.8"  # Changed from "kuchiki"
+brik = "0.8"  # Changed from "kuchiki"
 ```
 
-Then remap code references:
+Update your code:
 
 ```rust
-use kuchikiki as kuchiki;
+use brik::parse_html;  // Changed from kuchiki
+use brik::traits::*;
 ```
 
 ## Quick Start
 
 ```rust
-use kuchikiki::parse_html;
-use kuchikiki::traits::*;
+use brik::parse_html;
+use brik::traits::*;
 
 // Parse HTML and query with CSS selectors
 let document = parse_html().one("<p class='greeting'>Hello, world!</p>");
@@ -64,11 +65,11 @@ For more detailed examples, see the [examples](examples/) directory.
 
 ### Safe Mode
 
-By default, kuchikiki uses unsafe code for performance. To build without any unsafe blocks:
+By default, brik uses unsafe code for performance. To build without any unsafe blocks:
 
 ```toml
 [dependencies]
-kuchikiki = { version = "0.8", features = ["safe"] }
+brik = { version = "0.8", features = ["safe"] }
 ```
 
 Or via command line:
@@ -78,7 +79,7 @@ cargo build --features safe
 cargo test --features safe
 ```
 
-**Note:** This only affects kuchikiki's code, not its dependencies.
+**Note:** This only affects brik's code, not its dependencies.
 
 ### Bloom Filter Optimization
 
@@ -86,12 +87,12 @@ Enable bloom filter optimization for faster CSS selector matching:
 
 ```toml
 [dependencies]
-kuchikiki = { version = "0.8", features = ["bloom-filter"] }
+brik = { version = "0.8", features = ["bloom-filter"] }
 ```
 
 ## Documentation
 
-Full API documentation is available at [docs.rs/kuchikiki](https://docs.rs/kuchikiki).
+Full API documentation is available at [docs.rs/brik](https://docs.rs/brik).
 
 ## Examples
 
@@ -118,6 +119,9 @@ Licensed under the MIT license. See [LICENSE](LICENSE) for details.
 
 ## Credits
 
-- Original Kuchiki library by Simon Sapin
-- Maintained by the Brave Authors
-- Current maintainer: Adam Mill (@theroyalwhee0)
+This project builds on the work of:
+
+- **Original Kuchiki library**: [kuchiki-rs/kuchiki](https://github.com/kuchiki-rs/kuchiki) by Simon Sapin
+- **Brave fork**: [brave/kuchikiki](https://github.com/brave/kuchikiki) maintained by the Brave Authors and Ralph Giles
+
+**Brik** is maintained by Adam Mill (@theroyalwhee0)

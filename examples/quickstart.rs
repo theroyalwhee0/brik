@@ -2,8 +2,8 @@
 
 #![allow(clippy::print_stdout)]
 
-use kuchikiki::parse_html;
-use kuchikiki::traits::*;
+use brik::parse_html;
+use brik::traits::*;
 
 fn main() {
     // Parse an HTML document
