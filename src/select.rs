@@ -119,7 +119,7 @@ impl PrecomputedHash for LocalNameSelector {
     }
 }
 
-/// Selector implementation for kuchikiki's DOM.
+/// Selector implementation for Brik's DOM.
 #[derive(Debug, Clone)]
 pub struct KuchikiSelectors;
 
@@ -440,7 +440,7 @@ impl selectors::Element for NodeDataRef<ElementData> {
 
     #[inline]
     fn has_custom_state(&self, _name: &LocalNameSelector) -> bool {
-        // kuchikiki is a static DOM, no custom states
+        // Brik is a static DOM, no custom states
         false
     }
 

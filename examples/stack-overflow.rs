@@ -6,9 +6,9 @@ fn main() {
     let mut depth = 2;
     // 20 M nodes is a few GB of memory.
     while depth <= 20_000_000 {
-        let mut node = kuchikiki::NodeRef::new_text("");
+        let mut node = brik::NodeRef::new_text("");
         for _ in 0..depth {
-            let parent = kuchikiki::NodeRef::new_text("");
+            let parent = brik::NodeRef::new_text("");
             parent.append(node);
             node = parent;
         }

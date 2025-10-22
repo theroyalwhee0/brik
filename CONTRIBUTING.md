@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to kuchikiki! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to Brik! This document provides guidelines for contributing to the project.
 
 ## Code of Conduct
 
@@ -15,7 +15,7 @@ If you find a bug, please create an issue with:
 - A clear, descriptive title
 - Steps to reproduce the problem
 - Expected vs actual behavior
-- Your environment (OS, Rust version, kuchikiki version)
+- Your environment (OS, Rust version, Brik version)
 - Any relevant error messages or logs
 
 ### Suggesting Enhancements
@@ -41,8 +41,8 @@ Enhancement suggestions are welcome! Please create an issue describing:
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR-USERNAME/kuchikiki.git
-cd kuchikiki
+git clone https://github.com/YOUR-USERNAME/brik.git
+cd brik
 
 # Build the project
 cargo build

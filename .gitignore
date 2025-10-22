@@ -1,5 +1,10 @@
-target
+# Rust ecosystem.
+/target
 Cargo.lock
-.cargo/config
-.focus/
+
+# AI configuration.
 .claude/
+.focus/
+
+# Local files.
+.local/

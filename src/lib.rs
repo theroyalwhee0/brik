@@ -1,6 +1,19 @@
 /*!
 
-Kuchikiki (口利き) is an HTML tree manipulation library for Rust.
+Brik is an HTML tree manipulation library for Rust.
+
+A building block for HTML parsing and manipulation - simple, solid, and stackable.
+
+# Quick Start
+
+```rust
+use brik::parse_html;
+use brik::traits::*;
+
+let document = parse_html().one("<p class='greeting'>Hello, world!</p>");
+let greeting = document.select_first(".greeting").unwrap();
+assert_eq!(greeting.text_contents(), "Hello, world!");
+```
 
 */
 
@@ -35,11 +48,11 @@ pub use parser::{parse_fragment, parse_html, parse_html_with_options, ParseOpts,
 pub use select::{Selector, Selectors, Specificity};
 pub use tree::{Doctype, DocumentData, ElementData, Node, NodeData, NodeRef};
 
-/// This module re-exports a number of traits that are useful when using Kuchikiki.
+/// This module re-exports a number of traits that are useful when using Brik.
 /// It can be used with:
 ///
 /// ```rust
-/// use kuchikiki::traits::*;
+/// use brik::traits::*;
 /// ```
 pub mod traits {
     pub use crate::iter::{ElementIterator, NodeIterator};
