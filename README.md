@@ -8,14 +8,16 @@ A Rust library for parsing, manipulating, and querying HTML documents using CSS 
 
 ## About
 
-This is a fork of the [Kuchiki (朽木)](https://github.com/kuchiki-rs/kuchiki) library, which is now unmaintained.
+This is a fork of [Kuchiki (朽木)](https://github.com/kuchiki-rs/kuchiki) by way of Brave's [Kuchikiki fork](https://github.com/brave/kuchikiki). The original Kuchiki is now unmaintained.
 
 **Brik** is a building block for HTML manipulation - simple, solid, and stackable.
+
+This fork maintains compatibility with current servo crates (html5ever, selectors, etc.) and provides ongoing updates. See the [Changelog](CHANGELOG.md) for version history and updates.
 
 ## Features
 
 - ✨ **Full HTML5 parsing** via [html5ever](https://github.com/servo/html5ever)
-- 🎯 **CSS selector queries** for finding elements
+- 🎯 **CSS selector queries** via [selectors](https://github.com/servo/stylo/tree/main/selectors)
 - 🌳 **Tree manipulation** - append, prepend, insert, detach nodes
 - 🔍 **Node inspection** - traverse ancestors, siblings, descendants
 - 📝 **Serialization** - convert trees back to HTML
@@ -24,6 +26,8 @@ This is a fork of the [Kuchiki (朽木)](https://github.com/kuchiki-rs/kuchiki) 
 
 ## Installation
 
+> ⚠️ **Status: Alpha** - Passes all tests but not yet recommended for production use.
+
 Add this to your `Cargo.toml`:
 
 ```toml
@@ -31,19 +35,19 @@ Add this to your `Cargo.toml`:
 brik = "0.8"
 ```
 
-### Migrating from Kuchiki
+### Migrating from Kuchiki or Kuchikiki
 
-If you're migrating from the original `kuchiki` crate:
+This migration applies to both Kuchiki and Kuchikiki.
 
 ```toml
 [dependencies]
-brik = "0.8"  # Changed from "kuchiki"
+brik = "0.8"  # Changed from "kuchiki" or "kuchikiki"
 ```
 
 Update your code:
 
 ```rust
-use brik::parse_html;  // Changed from kuchiki
+use brik::parse_html;  // Changed from kuchiki or kuchikiki
 use brik::traits::*;
 ```
 
@@ -83,7 +87,7 @@ cargo test --features safe
 
 ### Bloom Filter Optimization
 
-Enable bloom filter optimization for faster CSS selector matching:
+Enable bloom filter optimization for faster CSS selector matching on large documents (applies to IDs and classes):
 
 ```toml
 [dependencies]
@@ -109,14 +113,6 @@ See the [examples](examples/) directory for all available examples.
 
 See the [Security Policy](SECURITY.md) for information on reporting vulnerabilities.
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-Licensed under the MIT license. See [LICENSE](LICENSE) for details.
-
 ## Credits
 
 This project builds on the work of:
@@ -124,4 +120,12 @@ This project builds on the work of:
 - **Original Kuchiki library**: [kuchiki-rs/kuchiki](https://github.com/kuchiki-rs/kuchiki) by Simon Sapin
 - **Brave fork**: [brave/kuchikiki](https://github.com/brave/kuchikiki) maintained by the Brave Authors and Ralph Giles
 
-**Brik** is maintained by Adam Mill (@theroyalwhee0)
+**Brik** is maintained by Adam Mill ([@theroyalwhee0](https://github.com/theroyalwhee0))
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting a Pull Request.
+
+## License
+
+Licensed under the MIT license. See [LICENSE](LICENSE) for details.
