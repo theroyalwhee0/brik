@@ -71,6 +71,7 @@ impl<T> CellOption for Cell<Option<T>> {
     #[inline]
     fn is_none(&self) -> bool {
         #[cfg(not(feature = "safe"))]
+        #[allow(unsafe_code)]
         {
             unsafe { (*self.as_ptr()).is_none() }
         }
@@ -96,6 +97,7 @@ impl<T> CellOptionWeak<T> for Cell<Option<Weak<T>>> {
     #[inline]
     fn upgrade(&self) -> Option<Rc<T>> {
         #[cfg(not(feature = "safe"))]
+        #[allow(unsafe_code)]
         {
             unsafe { (*self.as_ptr()).as_ref().and_then(Weak::upgrade) }
         }
@@ -111,6 +113,7 @@ impl<T> CellOptionWeak<T> for Cell<Option<Weak<T>>> {
     #[inline]
     fn clone_inner(&self) -> Option<Weak<T>> {
         #[cfg(not(feature = "safe"))]
+        #[allow(unsafe_code)]
         {
             unsafe { (*self.as_ptr()).clone() }
         }
@@ -137,6 +140,7 @@ impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
     #[inline]
     fn take_if_unique_strong(&self) -> Option<Rc<T>> {
         #[cfg(not(feature = "safe"))]
+        #[allow(unsafe_code)]
         {
             unsafe {
                 match *self.as_ptr() {
@@ -166,6 +170,7 @@ impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
     #[inline]
     fn clone_inner(&self) -> Option<Rc<T>> {
         #[cfg(not(feature = "safe"))]
+        #[allow(unsafe_code)]
         {
             unsafe { (*self.as_ptr()).clone() }
         }

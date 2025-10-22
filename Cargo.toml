@@ -17,15 +17,10 @@ name = "brik"
 
 [lints.rust]
 # Unsafe code policy:
-# - Default: unsafe code is allowed for performance
-# - With 'safe' feature: all unsafe blocks are disabled via cfg
-#
-# To build with safe mode: cargo build --features safe
-# To test with safe mode: cargo test --features safe
-#
-# Note: This only affects brik's code. Dependencies may still contain unsafe code.
-# The unsafe blocks are wrapped with #[cfg(not(feature = "safe"))], so enabling
-# the 'safe' feature results in zero unsafe blocks in brik.
+# - Default mode: Uses unsafe code for performance (wrapped with #[cfg(not(feature = "safe"))])
+# - Safe mode: Build with --features safe to eliminate all unsafe blocks
+# All unsafe blocks are marked with "UNSAFE:" comments explaining their safety requirements.
+unsafe_code = "deny"
 missing_docs = "deny"
 
 [lints.rustdoc]
