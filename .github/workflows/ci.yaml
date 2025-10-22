@@ -37,7 +37,7 @@ jobs:
 
       - name: Cargo build
         run: |
-          cargo build --locked --all-targets
+          cargo build --all-targets
 
       - name: Install shellcheck
         run: |
@@ -66,16 +66,16 @@ jobs:
 
       - name: Cargo clippy
         run: |
-          cargo clippy --locked --all-targets -- -D warnings
+          cargo clippy --all-targets -- -D warnings
 
       - name: Cargo test
         run: |
           echo "Running tests"
-          cargo test --locked --all-features --all-targets
+          cargo test --all-features --all-targets
 
           if cargo metadata --no-deps --format-version 1 | jq -e '.packages[].targets[] | select(.kind[] == "lib")' >/dev/null 2>&1; then
             echo "Running doc tests"
-            cargo test --locked --all-features --doc
+            cargo test --all-features --doc
           fi
 
       - name: Clean cargo cache
