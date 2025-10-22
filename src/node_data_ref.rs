@@ -178,6 +178,7 @@ impl<T> NodeDataRef<T> {
 
 // Generic Deref implementation for unsafe mode.
 #[cfg(not(feature = "safe"))]
+#[allow(unsafe_code)]
 impl<T> Deref for NodeDataRef<T> {
     type Target = T;
     #[inline]
