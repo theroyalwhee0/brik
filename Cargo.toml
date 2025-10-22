@@ -16,10 +16,6 @@ edition = "2018"
 name = "brik"
 
 [lints.rust]
-# Unsafe code policy:
-# - Default mode: Uses unsafe code for performance (wrapped with #[cfg(not(feature = "safe"))])
-# - Safe mode: Build with --features safe to eliminate all unsafe blocks
-# All unsafe blocks are marked with "UNSAFE:" comments explaining their safety requirements.
 unsafe_code = "deny"
 missing_docs = "deny"
 
@@ -60,9 +56,8 @@ precomputed-hash = "0.1.1"
 # Enable bloom filter optimization for faster selector matching.
 bloom-filter = []
 
-# Enable safe mode (no unsafe code in brik). When enabled, uses safe alternatives.
-# Safe mode allows brik to be built without any unsafe blocks.
+# Unsafe code policy:
+# - Default mode: Uses unsafe code for performance
+# - Safe mode: Build with --features safe to eliminate all unsafe blocks
 # Note: This only affects brik's code, not its dependencies.
-# Default: unsafe mode (for performance)
-# To enable safe mode: cargo build --features safe
 safe = []
