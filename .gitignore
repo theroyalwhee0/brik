@@ -1,6 +1,5 @@
 # Rust ecosystem.
 /target
-Cargo.lock
 
 # AI configuration.
 .claude/
