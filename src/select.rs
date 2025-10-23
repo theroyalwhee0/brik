@@ -121,9 +121,9 @@ impl PrecomputedHash for LocalNameSelector {
 
 /// Selector implementation for Brik's DOM.
 #[derive(Debug, Clone)]
-pub struct KuchikiSelectors;
+pub struct BrikSelectors;
 
-impl SelectorImpl for KuchikiSelectors {
+impl SelectorImpl for BrikSelectors {
     type AttrValue = AttrValue;
     type Identifier = LocalNameSelector;
     type LocalName = LocalNameSelector;
@@ -139,10 +139,10 @@ impl SelectorImpl for KuchikiSelectors {
 }
 
 /// Parser for CSS selectors.
-struct KuchikiParser;
+struct BrikParser;
 
-impl<'i> Parser<'i> for KuchikiParser {
-    type Impl = KuchikiSelectors;
+impl<'i> Parser<'i> for BrikParser {
+    type Impl = BrikSelectors;
     type Error = SelectorParseErrorKind<'i>;
 
     fn parse_non_ts_pseudo_class(
@@ -207,7 +207,7 @@ pub enum PseudoClass {
 }
 
 impl NonTSPseudoClass for PseudoClass {
-    type Impl = KuchikiSelectors;
+    type Impl = BrikSelectors;
 
     fn is_active_or_hover(&self) -> bool {
         matches!(*self, PseudoClass::Active | PseudoClass::Hover)
@@ -255,11 +255,11 @@ impl ToCss for PseudoElement {
 }
 
 impl selectors::parser::PseudoElement for PseudoElement {
-    type Impl = KuchikiSelectors;
+    type Impl = BrikSelectors;
 }
 
 impl selectors::Element for NodeDataRef<ElementData> {
-    type Impl = KuchikiSelectors;
+    type Impl = BrikSelectors;
 
     #[inline]
     fn opaque(&self) -> OpaqueElement {
@@ -407,7 +407,7 @@ impl selectors::Element for NodeDataRef<ElementData> {
     fn match_pseudo_element(
         &self,
         pseudo: &PseudoElement,
-        _context: &mut matching::MatchingContext<KuchikiSelectors>,
+        _context: &mut matching::MatchingContext<BrikSelectors>,
     ) -> bool {
         match *pseudo {}
     }
@@ -415,7 +415,7 @@ impl selectors::Element for NodeDataRef<ElementData> {
     fn match_non_ts_pseudo_class(
         &self,
         pseudo: &PseudoClass,
-        _context: &mut matching::MatchingContext<KuchikiSelectors>,
+        _context: &mut matching::MatchingContext<BrikSelectors>,
     ) -> bool {
         use self::PseudoClass::*;
         match *pseudo {
@@ -455,7 +455,7 @@ impl selectors::Element for NodeDataRef<ElementData> {
 pub struct Selectors(pub Vec<Selector>);
 
 /// A pre-compiled CSS Selector.
-pub struct Selector(GenericSelector<KuchikiSelectors>);
+pub struct Selector(GenericSelector<BrikSelectors>);
 
 /// The specificity of a selector.
 ///
@@ -475,7 +475,7 @@ impl Selectors {
     #[inline]
     pub fn compile(s: &str) -> Result<Selectors, ()> {
         let mut input = cssparser::ParserInput::new(s);
-        match SelectorList::parse(&KuchikiParser, &mut cssparser::Parser::new(&mut input), selectors::parser::ParseRelative::No) {
+        match SelectorList::parse(&BrikParser, &mut cssparser::Parser::new(&mut input), selectors::parser::ParseRelative::No) {
             Ok(list) => Ok(Selectors(list.slice().iter().cloned().map(Selector).collect())),
             Err(_) => Err(()),
         }
