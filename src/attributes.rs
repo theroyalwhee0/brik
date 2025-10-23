@@ -207,6 +207,45 @@ impl Attributes {
         self.map
             .swap_remove(&ExpandedName::new(namespace, local_name))
     }
+
+    /// Returns an iterator over all attributes in a specific namespace.
+    ///
+    /// Yields (local_name, value) pairs for each attribute in the given namespace.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate html5ever;
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let doc = parse_html().one(r#"<div class="test" id="main" data-value="foo">Content</div>"#);
+    /// let div = doc.select_first("div").unwrap();
+    /// let attrs = div.attributes.borrow();
+    ///
+    /// // Collect all attributes in the null namespace
+    /// let mut null_ns_attrs: Vec<_> = attrs.attrs_in_ns(ns!()).collect();
+    /// null_ns_attrs.sort_by(|(a, _), (b, _)| a.as_ref().cmp(b.as_ref()));
+    ///
+    /// assert_eq!(null_ns_attrs.len(), 3);
+    /// assert_eq!(null_ns_attrs[0].0.as_ref(), "class");
+    /// assert_eq!(null_ns_attrs[0].1, "test");
+    /// ```
+    pub fn attrs_in_ns<N>(&self, namespace: N) -> impl Iterator<Item = (&LocalName, &str)>
+    where
+        N: Into<Namespace>,
+    {
+        let ns = namespace.into();
+        self.map
+            .iter()
+            .filter_map(move |(name, attr)| {
+                if name.ns == ns {
+                    Some((&name.local, attr.value.as_str()))
+                } else {
+                    None
+                }
+            })
+    }
 }
 
 #[cfg(test)]
@@ -323,5 +362,55 @@ mod tests {
 
         let removed = attrs.remove_ns(ns!(), "nonexistent");
         assert_eq!(removed, None);
+    }
+
+    #[test]
+    fn attrs_in_ns_iterates_null_namespace() {
+        let doc = parse_html().one(r#"<div class="test" id="main" data-value="foo">Content</div>"#);
+        let div = doc.select_first("div").unwrap();
+        let attrs = div.attributes.borrow();
+
+        let mut null_ns_attrs: Vec<_> = attrs.attrs_in_ns(ns!()).collect();
+        null_ns_attrs.sort_by(|(a, _), (b, _)| a.as_ref().cmp(b.as_ref()));
+
+        assert_eq!(null_ns_attrs.len(), 3);
+        assert_eq!(null_ns_attrs[0].0.as_ref(), "class");
+        assert_eq!(null_ns_attrs[0].1, "test");
+        assert_eq!(null_ns_attrs[1].0.as_ref(), "data-value");
+        assert_eq!(null_ns_attrs[1].1, "foo");
+        assert_eq!(null_ns_attrs[2].0.as_ref(), "id");
+        assert_eq!(null_ns_attrs[2].1, "main");
+    }
+
+    #[test]
+    fn attrs_in_ns_empty_when_no_match() {
+        let doc = parse_html().one(r#"<div class="test">Content</div>"#);
+        let div = doc.select_first("div").unwrap();
+        let attrs = div.attributes.borrow();
+
+        // HTML namespace - no attributes should match
+        let html_ns_attrs: Vec<_> = attrs.attrs_in_ns(ns!(html)).collect();
+        assert_eq!(html_ns_attrs.len(), 0);
+    }
+
+    #[test]
+    fn attrs_in_ns_custom_namespace() {
+        let mut attrs = Attributes {
+            map: Default::default(),
+        };
+
+        let custom_ns = "http://example.com/ns";
+        attrs.insert_ns(custom_ns, "attr1", None, "value1".to_string());
+        attrs.insert_ns(custom_ns, "attr2", None, "value2".to_string());
+        attrs.insert_ns(ns!(), "regular", None, "value3".to_string());
+
+        let mut custom_attrs: Vec<_> = attrs.attrs_in_ns(custom_ns).collect();
+        custom_attrs.sort_by(|(a, _), (b, _)| a.as_ref().cmp(b.as_ref()));
+
+        assert_eq!(custom_attrs.len(), 2);
+        assert_eq!(custom_attrs[0].0.as_ref(), "attr1");
+        assert_eq!(custom_attrs[0].1, "value1");
+        assert_eq!(custom_attrs[1].0.as_ref(), "attr2");
+        assert_eq!(custom_attrs[1].1, "value2");
     }
 }
