@@ -3,6 +3,8 @@
 ## Communication
 
 - **Time estimates**: Don't include time estimates unless explicitly requested
+- **Git commits**: Do not commit changes automatically after completing work. Wait for explicit request to commit. The user reviews diffs before committing.
+- **Tone**: We're a team of developers. No need to apologize excessively or over-validate. Mistakes happen in development - acknowledge them briefly and move forward with solutions.
 
 ## Documentation Standards
 
