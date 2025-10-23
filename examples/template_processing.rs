@@ -54,7 +54,10 @@ fn main() {
         .elements()
         .elements_in_ns(ns!(svg))
         .collect();
-    println!("  SVG elements (template artifacts): {}\n", svg_elements.len());
+    println!(
+        "  SVG elements (template artifacts): {}\n",
+        svg_elements.len()
+    );
 
     // Step 2: Process template directives (simulated)
     println!("Step 2: Processing template directives");
@@ -112,5 +115,8 @@ fn main() {
     println!("✓ Template processing complete!");
     println!("  Original: {} elements", all_elements.len());
     println!("  Final: {} elements", remaining_elements.len());
-    println!("  Removed: {} elements", all_elements.len() - remaining_elements.len());
+    println!(
+        "  Removed: {} elements",
+        all_elements.len() - remaining_elements.len()
+    );
 }

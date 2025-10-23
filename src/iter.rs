@@ -705,10 +705,7 @@ mod tests {
 
         let doc = parse_html().one(html);
 
-        let mut svg_elements = doc
-            .descendants()
-            .elements()
-            .elements_in_ns(ns!(svg));
+        let mut svg_elements = doc.descendants().elements().elements_in_ns(ns!(svg));
 
         // Test forward iteration
         let first = svg_elements.next().unwrap();
@@ -750,8 +747,7 @@ mod tests {
         let doc = parse_html().one(html);
 
         // Try to detach elements that don't exist - should not panic
-        doc
-            .descendants()
+        doc.descendants()
             .elements()
             .filter(|e| e.local_name().as_ref() == "nonexistent")
             .map(|e| e.as_node().clone())

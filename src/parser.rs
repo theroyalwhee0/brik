@@ -80,7 +80,10 @@ impl TreeSink for Sink {
 
     type Handle = NodeRef;
 
-    type ElemName<'a> = ExpandedName<'a> where Self: 'a;
+    type ElemName<'a>
+        = ExpandedName<'a>
+    where
+        Self: 'a;
 
     #[inline]
     fn parse_error(&self, message: Cow<'static, str>) {

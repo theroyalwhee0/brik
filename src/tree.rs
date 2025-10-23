@@ -586,10 +586,7 @@ mod tests {
         let html = r"<!DOCTYPE html><html><body><div>Test</div></body></html>";
         let document = parse_html().one(html);
         let div = document.select_first("div").unwrap();
-        assert_eq!(
-            div.namespace_uri().as_ref(),
-            "http://www.w3.org/1999/xhtml"
-        );
+        assert_eq!(div.namespace_uri().as_ref(), "http://www.w3.org/1999/xhtml");
 
         // Test SVG element namespace
         let svg_html = r#"<!DOCTYPE html>

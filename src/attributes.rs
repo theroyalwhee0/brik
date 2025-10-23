@@ -57,7 +57,10 @@ impl Attributes {
     }
 
     /// Like IndexMap::entry
-    pub fn entry<A: Into<LocalName>>(&mut self, local_name: A) -> Entry<'_, ExpandedName, Attribute> {
+    pub fn entry<A: Into<LocalName>>(
+        &mut self,
+        local_name: A,
+    ) -> Entry<'_, ExpandedName, Attribute> {
         self.map.entry(ExpandedName::new(ns!(), local_name))
     }
 
@@ -236,15 +239,13 @@ impl Attributes {
         N: Into<Namespace>,
     {
         let ns = namespace.into();
-        self.map
-            .iter()
-            .filter_map(move |(name, attr)| {
-                if name.ns == ns {
-                    Some((&name.local, attr.value.as_str()))
-                } else {
-                    None
-                }
-            })
+        self.map.iter().filter_map(move |(name, attr)| {
+            if name.ns == ns {
+                Some((&name.local, attr.value.as_str()))
+            } else {
+                None
+            }
+        })
     }
 
     /// Removes all xmlns namespace declarations for a given namespace URI.
@@ -292,7 +293,8 @@ impl Attributes {
         let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
 
         // Find all xmlns attributes whose value matches the target URI
-        let to_remove: Vec<_> = self.map
+        let to_remove: Vec<_> = self
+            .map
             .iter()
             .filter_map(|(name, attr)| {
                 if name.ns == xmlns_ns && attr.value == namespace_uri {
@@ -383,19 +385,9 @@ mod tests {
             map: Default::default(),
         };
 
-        attrs.insert_ns(
-            ns!(),
-            "test",
-            None,
-            "first".to_string(),
-        );
+        attrs.insert_ns(ns!(), "test", None, "first".to_string());
 
-        let old = attrs.insert_ns(
-            ns!(),
-            "test",
-            None,
-            "second".to_string(),
-        );
+        let old = attrs.insert_ns(ns!(), "test", None, "second".to_string());
 
         assert_eq!(old.as_ref().map(|a| a.value.as_str()), Some("first"));
         assert_eq!(attrs.get_ns(ns!(), "test"), Some("second"));
