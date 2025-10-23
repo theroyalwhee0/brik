@@ -574,3 +574,73 @@ impl NodeRef {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parser::parse_html;
+    use crate::traits::*;
+
+    #[test]
+    fn element_namespace_uri() {
+        // Test HTML element namespace
+        let html = r"<!DOCTYPE html><html><body><div>Test</div></body></html>";
+        let document = parse_html().one(html);
+        let div = document.select_first("div").unwrap();
+        assert_eq!(
+            div.namespace_uri().as_ref(),
+            "http://www.w3.org/1999/xhtml"
+        );
+
+        // Test SVG element namespace
+        let svg_html = r#"<!DOCTYPE html>
+<html>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <circle cx="50" cy="50" r="40"/>
+</svg>
+</body>
+</html>"#;
+        let document = parse_html().one(svg_html);
+        let svg = document.select_first("svg").unwrap();
+        assert_eq!(svg.namespace_uri().as_ref(), "http://www.w3.org/2000/svg");
+
+        let circle = document.select_first("circle").unwrap();
+        assert_eq!(
+            circle.namespace_uri().as_ref(),
+            "http://www.w3.org/2000/svg"
+        );
+    }
+
+    #[test]
+    fn element_local_name() {
+        let html = r"<!DOCTYPE html><html><body><div class='test'>Content</div></body></html>";
+        let document = parse_html().one(html);
+        let div = document.select_first("div").unwrap();
+        assert_eq!(div.local_name().as_ref(), "div");
+
+        let body = document.select_first("body").unwrap();
+        assert_eq!(body.local_name().as_ref(), "body");
+    }
+
+    #[test]
+    fn element_prefix() {
+        // Regular HTML elements have no prefix
+        let html = r"<!DOCTYPE html><html><body><div>Test</div></body></html>";
+        let document = parse_html().one(html);
+        let div = document.select_first("div").unwrap();
+        assert_eq!(div.prefix(), None);
+
+        // SVG elements typically have no prefix when embedded in HTML5
+        let svg_html = r#"<!DOCTYPE html>
+<html>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100"/>
+</svg>
+</body>
+</html>"#;
+        let document = parse_html().one(svg_html);
+        let rect = document.select_first("rect").unwrap();
+        assert_eq!(rect.prefix(), None);
+    }
+}
