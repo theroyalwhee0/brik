@@ -38,6 +38,7 @@ jobs:
       - name: Cargo build
         run: |
           cargo build --all-targets
+          cargo build --examples
 
       - name: Install shellcheck
         run: |
@@ -77,6 +78,10 @@ jobs:
             echo "Running doc tests"
             cargo test --all-features --doc
           fi
+
+      - name: Test safe feature and unsafe code lints
+        run: |
+          bash scripts/test-safe-feature.sh
 
       - name: Clean cargo cache
         run: |
