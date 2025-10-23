@@ -246,6 +246,68 @@ impl Attributes {
                 }
             })
     }
+
+    /// Removes all xmlns namespace declarations for a given namespace URI.
+    ///
+    /// Scans the element's attributes for any `xmlns:prefix="uri"` declarations where
+    /// the URI matches the provided namespace URI, and removes them.
+    ///
+    /// xmlns declarations are attributes in the `http://www.w3.org/2000/xmlns/` namespace.
+    /// The attribute's local name is the prefix (e.g., `xmlns:tmpl` has local name `tmpl`),
+    /// and the attribute value is the namespace URI.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::Attributes;
+    /// use html5ever::{Namespace, LocalName, Prefix};
+    ///
+    /// let mut attrs = Attributes {
+    ///     map: Default::default(),
+    /// };
+    ///
+    /// // Manually add xmlns declarations (HTML parser doesn't preserve these in xmlns namespace)
+    /// let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
+    /// attrs.insert_ns(
+    ///     &xmlns_ns,
+    ///     "tmpl",
+    ///     Some(Prefix::from("xmlns")),
+    ///     "http://example.com/tmpl".to_string(),
+    /// );
+    /// attrs.insert_ns(
+    ///     &xmlns_ns,
+    ///     "custom",
+    ///     Some(Prefix::from("xmlns")),
+    ///     "http://example.com/custom".to_string(),
+    /// );
+    ///
+    /// // Remove the template namespace declaration
+    /// attrs.remove_xmlns_for("http://example.com/tmpl");
+    ///
+    /// // The custom namespace declaration should still be present
+    /// assert!(attrs.has_ns(&xmlns_ns, "custom"));
+    /// assert!(!attrs.has_ns(&xmlns_ns, "tmpl"));
+    /// ```
+    pub fn remove_xmlns_for(&mut self, namespace_uri: &str) {
+        let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
+
+        // Find all xmlns attributes whose value matches the target URI
+        let to_remove: Vec<_> = self.map
+            .iter()
+            .filter_map(|(name, attr)| {
+                if name.ns == xmlns_ns && attr.value == namespace_uri {
+                    Some(name.local.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Remove each matching attribute
+        for local_name in to_remove {
+            self.remove_ns(&xmlns_ns, local_name);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -412,5 +474,121 @@ mod tests {
         assert_eq!(custom_attrs[0].1, "value1");
         assert_eq!(custom_attrs[1].0.as_ref(), "attr2");
         assert_eq!(custom_attrs[1].1, "value2");
+    }
+
+    #[test]
+    fn remove_xmlns_for_removes_matching_declarations() {
+        let mut attrs = Attributes {
+            map: Default::default(),
+        };
+
+        let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
+        attrs.insert_ns(
+            &xmlns_ns,
+            "tmpl",
+            Some(Prefix::from("xmlns")),
+            "http://example.com/tmpl".to_string(),
+        );
+        attrs.insert_ns(
+            &xmlns_ns,
+            "custom",
+            Some(Prefix::from("xmlns")),
+            "http://example.com/custom".to_string(),
+        );
+
+        attrs.remove_xmlns_for("http://example.com/tmpl");
+
+        // tmpl should be gone
+        assert!(!attrs.has_ns(&xmlns_ns, "tmpl"));
+
+        // custom should still be there
+        assert!(attrs.has_ns(&xmlns_ns, "custom"));
+    }
+
+    #[test]
+    fn remove_xmlns_for_removes_multiple_declarations() {
+        let mut attrs = Attributes {
+            map: Default::default(),
+        };
+
+        let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
+        // Add multiple declarations with the same URI
+        attrs.insert_ns(
+            &xmlns_ns,
+            "tmpl",
+            Some(Prefix::from("xmlns")),
+            "http://example.com/same".to_string(),
+        );
+        attrs.insert_ns(
+            &xmlns_ns,
+            "template",
+            Some(Prefix::from("xmlns")),
+            "http://example.com/same".to_string(),
+        );
+        attrs.insert_ns(
+            &xmlns_ns,
+            "other",
+            Some(Prefix::from("xmlns")),
+            "http://example.com/different".to_string(),
+        );
+
+        attrs.remove_xmlns_for("http://example.com/same");
+
+        assert!(!attrs.has_ns(&xmlns_ns, "tmpl"));
+        assert!(!attrs.has_ns(&xmlns_ns, "template"));
+        assert!(attrs.has_ns(&xmlns_ns, "other"));
+    }
+
+    #[test]
+    fn remove_xmlns_for_no_match() {
+        let mut attrs = Attributes {
+            map: Default::default(),
+        };
+
+        let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
+        attrs.insert_ns(
+            &xmlns_ns,
+            "custom",
+            Some(Prefix::from("xmlns")),
+            "http://example.com/custom".to_string(),
+        );
+
+        attrs.remove_xmlns_for("http://example.com/nonexistent");
+
+        // Original declaration should still be there
+        assert!(attrs.has_ns(&xmlns_ns, "custom"));
+    }
+
+    #[test]
+    fn remove_xmlns_for_empty_attributes() {
+        let mut attrs = Attributes {
+            map: Default::default(),
+        };
+
+        // Should not panic
+        attrs.remove_xmlns_for("http://example.com/any");
+    }
+
+    #[test]
+    fn remove_xmlns_for_doesnt_remove_regular_attributes() {
+        let mut attrs = Attributes {
+            map: Default::default(),
+        };
+
+        // Add a regular attribute (not in xmlns namespace)
+        attrs.insert("class", "test".to_string());
+
+        let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
+        attrs.insert_ns(
+            &xmlns_ns,
+            "tmpl",
+            Some(Prefix::from("xmlns")),
+            "http://example.com/tmpl".to_string(),
+        );
+
+        attrs.remove_xmlns_for("http://example.com/tmpl");
+
+        // Regular attribute should still be there
+        assert_eq!(attrs.get("class"), Some("test"));
     }
 }
