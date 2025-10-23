@@ -411,6 +411,44 @@ filter_map_like_iterator! {
     TextNodes: NodeRef::into_text_ref, NodeRef => NodeDataRef<RefCell<String>>
 }
 
+/// An element iterator adaptor that yields elements in a specific namespace.
+#[derive(Debug, Clone)]
+pub struct ElementsInNamespace<I> {
+    /// The underlying iterator.
+    iter: I,
+    /// The namespace to filter by.
+    namespace: html5ever::Namespace,
+}
+
+impl<I> Iterator for ElementsInNamespace<I>
+where
+    I: Iterator<Item = NodeDataRef<ElementData>>,
+{
+    type Item = NodeDataRef<ElementData>;
+
+    #[inline]
+    fn next(&mut self) -> Option<NodeDataRef<ElementData>> {
+        let namespace = &self.namespace;
+        self.iter
+            .by_ref()
+            .find(|element| element.namespace_uri() == namespace)
+    }
+}
+
+impl<I> DoubleEndedIterator for ElementsInNamespace<I>
+where
+    I: DoubleEndedIterator<Item = NodeDataRef<ElementData>>,
+{
+    #[inline]
+    fn next_back(&mut self) -> Option<NodeDataRef<ElementData>> {
+        let namespace = &self.namespace;
+        self.iter
+            .by_ref()
+            .rev()
+            .find(|element| element.namespace_uri() == namespace)
+    }
+}
+
 /// An element iterator adaptor that yields elements maching given selectors.
 pub struct Select<I, S = Selectors>
 where
@@ -484,6 +522,41 @@ pub trait NodeIterator: Sized + Iterator<Item = NodeRef> {
     fn select(self, selectors: &str) -> Result<Select<Elements<Self>>, ()> {
         self.elements().select(selectors)
     }
+
+    /// Detach all nodes in this iterator from their parents.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let html = r#"<div><p>One</p><p>Two</p><p>Three</p></div>"#;
+    ///
+    /// let doc = parse_html().one(html);
+    /// let div = doc.select_first("div").unwrap();
+    ///
+    /// // Detach all paragraph elements
+    /// let paragraphs: Vec<_> = div
+    ///     .as_node()
+    ///     .descendants()
+    ///     .select("p")
+    ///     .unwrap()
+    ///     .collect();
+    ///
+    /// paragraphs
+    ///     .into_iter()
+    ///     .map(|p| p.as_node().clone())
+    ///     .detach_all();
+    ///
+    /// assert_eq!(div.as_node().children().elements().count(), 0);
+    /// ```
+    #[inline]
+    fn detach_all(self) {
+        for node in self {
+            node.detach();
+        }
+    }
 }
 
 /// Convenience methods for element iterators.
@@ -500,7 +573,238 @@ pub trait ElementIterator: Sized + Iterator<Item = NodeDataRef<ElementData>> {
             selectors: s,
         })
     }
+
+    /// Filter this element iterator to elements in the given namespace.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # #[macro_use] extern crate html5ever;
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let html = r#"<!DOCTYPE html>
+    /// <html>
+    /// <body>
+    ///   <div>HTML element</div>
+    ///   <svg xmlns="http://www.w3.org/2000/svg">
+    ///     <circle r="10"/>
+    ///     <rect width="20" height="20"/>
+    ///   </svg>
+    /// </body>
+    /// </html>
+    /// "#;
+    ///
+    /// let doc = parse_html().one(html);
+    ///
+    /// // Find all SVG elements
+    /// let svg_elements: Vec<_> = doc
+    ///     .descendants()
+    ///     .elements()
+    ///     .elements_in_ns(ns!(svg))
+    ///     .collect();
+    ///
+    /// assert_eq!(svg_elements.len(), 3); // svg, circle, rect
+    /// ```
+    #[inline]
+    fn elements_in_ns(self, namespace: html5ever::Namespace) -> ElementsInNamespace<Self> {
+        ElementsInNamespace {
+            iter: self,
+            namespace,
+        }
+    }
 }
 
 impl<I> NodeIterator for I where I: Iterator<Item = NodeRef> {}
 impl<I> ElementIterator for I where I: Iterator<Item = NodeDataRef<ElementData>> {}
+
+#[cfg(test)]
+mod tests {
+    use crate::parser::parse_html;
+    use crate::traits::*;
+
+    #[test]
+    fn elements_in_ns_filters_by_namespace() {
+        let html = r#"<!DOCTYPE html>
+<html>
+<body>
+  <div>HTML element 1</div>
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <circle r="10"/>
+    <rect width="20" height="20"/>
+  </svg>
+  <p>HTML element 2</p>
+</body>
+</html>"#;
+
+        let doc = parse_html().one(html);
+
+        // Find all SVG elements
+        let svg_elements: Vec<_> = doc
+            .descendants()
+            .elements()
+            .elements_in_ns(ns!(svg))
+            .collect();
+
+        assert_eq!(svg_elements.len(), 3); // svg, circle, rect
+        assert!(svg_elements.iter().all(|e| e.namespace_uri() == &ns!(svg)));
+    }
+
+    #[test]
+    fn elements_in_ns_empty_when_no_match() {
+        let html = r#"<div><p>Only HTML elements</p></div>"#;
+        let doc = parse_html().one(html);
+
+        let svg_elements: Vec<_> = doc
+            .descendants()
+            .elements()
+            .elements_in_ns(ns!(svg))
+            .collect();
+
+        assert_eq!(svg_elements.len(), 0);
+    }
+
+    #[test]
+    fn elements_in_ns_works_with_nested_elements() {
+        let html = r#"<!DOCTYPE html>
+<html>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <g>
+      <circle r="10"/>
+      <circle r="20"/>
+    </g>
+  </svg>
+</body>
+</html>"#;
+
+        let doc = parse_html().one(html);
+
+        let svg_elements: Vec<_> = doc
+            .descendants()
+            .elements()
+            .elements_in_ns(ns!(svg))
+            .collect();
+
+        // svg, g, circle, circle
+        assert_eq!(svg_elements.len(), 4);
+    }
+
+    #[test]
+    fn elements_in_ns_double_ended_iteration() {
+        let html = r#"<!DOCTYPE html>
+<html>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <circle r="10"/>
+    <rect width="20" height="20"/>
+    <line x1="0" y1="0" x2="10" y2="10"/>
+  </svg>
+</body>
+</html>"#;
+
+        let doc = parse_html().one(html);
+
+        let mut svg_elements = doc
+            .descendants()
+            .elements()
+            .elements_in_ns(ns!(svg));
+
+        // Test forward iteration
+        let first = svg_elements.next().unwrap();
+        assert_eq!(first.local_name().as_ref(), "svg");
+
+        // Test reverse iteration
+        let last = svg_elements.next_back().unwrap();
+        assert_eq!(last.local_name().as_ref(), "line");
+    }
+
+    #[test]
+    fn detach_all_removes_elements() {
+        let html = r#"<div><p>One</p><p>Two</p><p>Three</p></div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select_first("div").unwrap();
+
+        let initial_count = div.as_node().children().elements().count();
+        assert_eq!(initial_count, 3);
+
+        // Detach all paragraph elements
+        let paragraphs: Vec<_> = div
+            .as_node()
+            .descendants()
+            .elements()
+            .filter(|e| e.local_name().as_ref() == "p")
+            .collect();
+
+        paragraphs
+            .into_iter()
+            .map(|p| p.as_node().clone())
+            .detach_all();
+
+        assert_eq!(div.as_node().children().elements().count(), 0);
+    }
+
+    #[test]
+    fn detach_all_with_empty_iterator() {
+        let html = r#"<div><p>Test</p></div>"#;
+        let doc = parse_html().one(html);
+
+        // Try to detach elements that don't exist - should not panic
+        doc
+            .descendants()
+            .elements()
+            .filter(|e| e.local_name().as_ref() == "nonexistent")
+            .map(|e| e.as_node().clone())
+            .detach_all();
+    }
+
+    #[test]
+    fn detach_all_with_mixed_namespaces() {
+        let html = r#"<!DOCTYPE html>
+<html>
+<body>
+  <div>HTML</div>
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <circle r="10"/>
+  </svg>
+  <p>More HTML</p>
+</body>
+</html>"#;
+
+        let doc = parse_html().one(html);
+        let body = doc.select_first("body").unwrap();
+
+        // Detach only SVG elements
+        let svg_elements: Vec<_> = body
+            .as_node()
+            .descendants()
+            .elements()
+            .elements_in_ns(ns!(svg))
+            .collect();
+
+        svg_elements
+            .into_iter()
+            .map(|e| e.as_node().clone())
+            .detach_all();
+
+        // HTML elements should still be present
+        let remaining_html: Vec<_> = body
+            .as_node()
+            .descendants()
+            .elements()
+            .elements_in_ns(ns!(html))
+            .collect();
+
+        assert_eq!(remaining_html.len(), 2); // div, p
+
+        // SVG elements should be gone
+        let remaining_svg: Vec<_> = body
+            .as_node()
+            .descendants()
+            .elements()
+            .elements_in_ns(ns!(svg))
+            .collect();
+
+        assert_eq!(remaining_svg.len(), 0);
+    }
+}
