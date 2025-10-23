@@ -61,6 +61,61 @@ pub struct ElementData {
     pub template_contents: Option<NodeRef>,
 }
 
+impl ElementData {
+    /// Returns the namespace URI of the element.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let doc = parse_html().one("<div>Hello</div>");
+    /// let div = doc.select_first("div").unwrap();
+    /// // HTML elements use the XHTML namespace
+    /// assert_eq!(div.namespace_uri().as_ref(), "http://www.w3.org/1999/xhtml");
+    /// ```
+    #[inline]
+    pub fn namespace_uri(&self) -> &html5ever::Namespace {
+        &self.name.ns
+    }
+
+    /// Returns the local name of the element without any namespace prefix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let doc = parse_html().one("<div>Hello</div>");
+    /// let div = doc.select_first("div").unwrap();
+    /// assert_eq!(div.local_name().as_ref(), "div");
+    /// ```
+    #[inline]
+    pub fn local_name(&self) -> &html5ever::LocalName {
+        &self.name.local
+    }
+
+    /// Returns the namespace prefix of the element, if any.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let doc = parse_html().one("<div>Hello</div>");
+    /// let div = doc.select_first("div").unwrap();
+    /// // HTML elements typically have no prefix
+    /// assert_eq!(div.prefix(), None);
+    /// ```
+    #[inline]
+    pub fn prefix(&self) -> Option<&html5ever::Prefix> {
+        self.name.prefix.as_ref()
+    }
+}
+
 /// Data specific to document nodes.
 #[derive(Debug, PartialEq, Clone)]
 pub struct DocumentData {
