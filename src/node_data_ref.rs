@@ -108,7 +108,9 @@ impl<T> NodeDataRef<T> {
                 _ if rc.as_element().is_some() => NodeDataKind::Element,
                 _ if rc.as_text().is_some() => NodeDataKind::Text,
                 _ if rc.as_comment().is_some() => NodeDataKind::Comment,
-                _ if rc.as_processing_instruction().is_some() => NodeDataKind::ProcessingInstruction,
+                _ if rc.as_processing_instruction().is_some() => {
+                    NodeDataKind::ProcessingInstruction
+                }
                 _ if rc.as_doctype().is_some() => NodeDataKind::Doctype,
                 _ if rc.as_document().is_some() => NodeDataKind::Document,
                 _ if rc.as_document_fragment().is_some() => NodeDataKind::DocumentFragment,
@@ -149,7 +151,9 @@ impl<T> NodeDataRef<T> {
                 _ if rc.as_element().is_some() => NodeDataKind::Element,
                 _ if rc.as_text().is_some() => NodeDataKind::Text,
                 _ if rc.as_comment().is_some() => NodeDataKind::Comment,
-                _ if rc.as_processing_instruction().is_some() => NodeDataKind::ProcessingInstruction,
+                _ if rc.as_processing_instruction().is_some() => {
+                    NodeDataKind::ProcessingInstruction
+                }
                 _ if rc.as_doctype().is_some() => NodeDataKind::Doctype,
                 _ if rc.as_document().is_some() => NodeDataKind::Document,
                 _ if rc.as_document_fragment().is_some() => NodeDataKind::DocumentFragment,
@@ -193,7 +197,9 @@ impl Deref for NodeDataRef<ElementData> {
     type Target = ElementData;
     #[inline]
     fn deref(&self) -> &ElementData {
-        self._keep_alive.as_element().expect("NodeDataRef<ElementData> must contain Element")
+        self._keep_alive
+            .as_element()
+            .expect("NodeDataRef<ElementData> must contain Element")
     }
 }
 
@@ -203,8 +209,14 @@ impl Deref for NodeDataRef<RefCell<String>> {
     #[inline]
     fn deref(&self) -> &RefCell<String> {
         match self._kind {
-            NodeDataKind::Text => self._keep_alive.as_text().expect("NodeDataRef with Text kind must contain text"),
-            NodeDataKind::Comment => self._keep_alive.as_comment().expect("NodeDataRef with Comment kind must contain comment"),
+            NodeDataKind::Text => self
+                ._keep_alive
+                .as_text()
+                .expect("NodeDataRef with Text kind must contain text"),
+            NodeDataKind::Comment => self
+                ._keep_alive
+                .as_comment()
+                .expect("NodeDataRef with Comment kind must contain comment"),
             _ => unreachable!("NodeDataRef<RefCell<String>> must be Text or Comment"),
         }
     }
@@ -215,7 +227,9 @@ impl Deref for NodeDataRef<Doctype> {
     type Target = Doctype;
     #[inline]
     fn deref(&self) -> &Doctype {
-        self._keep_alive.as_doctype().expect("NodeDataRef<Doctype> must contain Doctype")
+        self._keep_alive
+            .as_doctype()
+            .expect("NodeDataRef<Doctype> must contain Doctype")
     }
 }
 
@@ -224,7 +238,9 @@ impl Deref for NodeDataRef<DocumentData> {
     type Target = DocumentData;
     #[inline]
     fn deref(&self) -> &DocumentData {
-        self._keep_alive.as_document().expect("NodeDataRef<DocumentData> must contain Document")
+        self._keep_alive
+            .as_document()
+            .expect("NodeDataRef<DocumentData> must contain Document")
     }
 }
 
@@ -233,7 +249,9 @@ impl Deref for NodeDataRef<RefCell<(String, String)>> {
     type Target = RefCell<(String, String)>;
     #[inline]
     fn deref(&self) -> &RefCell<(String, String)> {
-        self._keep_alive.as_processing_instruction().expect("NodeDataRef<RefCell<(String, String)>> must contain ProcessingInstruction")
+        self._keep_alive
+            .as_processing_instruction()
+            .expect("NodeDataRef<RefCell<(String, String)>> must contain ProcessingInstruction")
     }
 }
 
@@ -242,7 +260,9 @@ impl Deref for NodeDataRef<()> {
     type Target = ();
     #[inline]
     fn deref(&self) -> &() {
-        self._keep_alive.as_document_fragment().expect("NodeDataRef<()> must contain DocumentFragment")
+        self._keep_alive
+            .as_document_fragment()
+            .expect("NodeDataRef<()> must contain DocumentFragment")
     }
 }
 
@@ -405,10 +425,7 @@ mod tests {
         let div = doc.select_first("div").unwrap();
 
         // Should work without .as_element().unwrap()
-        assert_eq!(
-            div.namespace_uri().as_ref(),
-            "http://www.w3.org/1999/xhtml"
-        );
+        assert_eq!(div.namespace_uri().as_ref(), "http://www.w3.org/1999/xhtml");
     }
 
     #[test]

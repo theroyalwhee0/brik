@@ -7,18 +7,20 @@ use brik::traits::*;
 
 fn main() {
     // Parse an HTML document
-    let document = parse_html().one(r#"
+    let document = parse_html().one(
+        r#"
         <html>
             <body>
                 <p class="greeting">Hello, world!</p>
             </body>
         </html>
-    "#);
+    "#,
+    );
 
     // Query with CSS selectors
     if let Ok(match_) = document.select_first(".greeting") {
         let node = match_.as_node();
-        println!("{}", node.text_contents());  // Prints: Hello, world!
+        println!("{}", node.text_contents()); // Prints: Hello, world!
     }
 
     // Manipulate the tree

@@ -366,9 +366,7 @@ impl selectors::Element for NodeDataRef<ElementData> {
         self.attributes
             .borrow()
             .get(local_name!("id"))
-            .is_some_and(|id_attr| {
-                case_sensitivity.eq(id.as_bytes(), id_attr.as_bytes())
-            })
+            .is_some_and(|id_attr| case_sensitivity.eq(id.as_bytes(), id_attr.as_bytes()))
     }
 
     #[inline]
@@ -393,10 +391,9 @@ impl selectors::Element for NodeDataRef<ElementData> {
     ) -> bool {
         let attrs = self.attributes.borrow();
         match *ns {
-            NamespaceConstraint::Any => attrs
-                .map
-                .iter()
-                .any(|(name, attr)| name.local == **local_name && operation.eval_str(attr.value.as_str())),
+            NamespaceConstraint::Any => attrs.map.iter().any(|(name, attr)| {
+                name.local == **local_name && operation.eval_str(attr.value.as_str())
+            }),
             NamespaceConstraint::Specific(ns_url) => attrs
                 .map
                 .get(&ExpandedName::new(ns_url, (**local_name).clone()))
@@ -475,8 +472,14 @@ impl Selectors {
     #[inline]
     pub fn compile(s: &str) -> Result<Selectors, ()> {
         let mut input = cssparser::ParserInput::new(s);
-        match SelectorList::parse(&BrikParser, &mut cssparser::Parser::new(&mut input), selectors::parser::ParseRelative::No) {
-            Ok(list) => Ok(Selectors(list.slice().iter().cloned().map(Selector).collect())),
+        match SelectorList::parse(
+            &BrikParser,
+            &mut cssparser::Parser::new(&mut input),
+            selectors::parser::ParseRelative::No,
+        ) {
+            Ok(list) => Ok(Selectors(
+                list.slice().iter().cloned().map(Selector).collect(),
+            )),
             Err(_) => Err(()),
         }
     }

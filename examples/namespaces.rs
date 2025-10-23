@@ -51,8 +51,14 @@ fn main() {
     let attrs = svg.attributes.borrow();
 
     // All these attributes are in the null namespace
-    println!("  SVG width: {}", attrs.get_ns(ns!(), "width").unwrap_or("N/A"));
-    println!("  SVG height: {}", attrs.get_ns(ns!(), "height").unwrap_or("N/A"));
+    println!(
+        "  SVG width: {}",
+        attrs.get_ns(ns!(), "width").unwrap_or("N/A")
+    );
+    println!(
+        "  SVG height: {}",
+        attrs.get_ns(ns!(), "height").unwrap_or("N/A")
+    );
     println!("  Has xmlns? {}\n", attrs.has_ns(ns!(), "xmlns"));
 
     // Example 3: Iterating attributes by namespace
@@ -71,12 +77,18 @@ fn main() {
 
     println!("  HTML <p>:");
     println!("    namespace: {}", p.namespace_uri().as_ref());
-    println!("    Is XHTML? {}", p.namespace_uri().as_ref() == "http://www.w3.org/1999/xhtml");
+    println!(
+        "    Is XHTML? {}",
+        p.namespace_uri().as_ref() == "http://www.w3.org/1999/xhtml"
+    );
 
     println!("  SVG <circle>:");
     let circle = document.select_first("circle").unwrap();
     println!("    namespace: {}", circle.namespace_uri().as_ref());
-    println!("    Is SVG? {}", circle.namespace_uri().as_ref() == "http://www.w3.org/2000/svg");
+    println!(
+        "    Is SVG? {}",
+        circle.namespace_uri().as_ref() == "http://www.w3.org/2000/svg"
+    );
     println!();
 
     // Example 5: Working with rect attributes
