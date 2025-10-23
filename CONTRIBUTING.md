@@ -52,9 +52,6 @@ cargo test
 
 # Run clippy
 cargo clippy
-
-# Run with bloom-filter feature
-cargo test --features bloom-filter
 ```
 
 ## Coding Standards
@@ -98,7 +95,6 @@ When adding new features:
 - Write unit tests for new functionality
 - Consider integration tests for complex features
 - Ensure tests pass with `cargo test`
-- Test with feature flags: `cargo test --features bloom-filter`
 - Use `#[should_panic]` or `Result` types for error case testing
 
 ## Documentation

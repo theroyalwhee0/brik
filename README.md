@@ -22,7 +22,6 @@ This fork maintains compatibility with current servo crates (html5ever, selector
 - 🔍 **Node inspection** - traverse ancestors, siblings, descendants
 - 📝 **Serialization** - convert trees back to HTML
 - 🛡️ **Optional safe mode** - build without unsafe code
-- ⚡ **Performance optimizations** - optional bloom filter for selectors
 
 ## Installation
 
@@ -84,15 +83,6 @@ cargo test --features safe
 ```
 
 **Note:** This only affects brik's code, not its dependencies.
-
-### Bloom Filter Optimization
-
-Enable bloom filter optimization for faster CSS selector matching on large documents (applies to IDs and classes):
-
-```toml
-[dependencies]
-brik = { version = "0.8", features = ["bloom-filter"] }
-```
 
 ## Documentation
 

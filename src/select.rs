@@ -446,34 +446,8 @@ impl selectors::Element for NodeDataRef<ElementData> {
 
     #[inline]
     fn add_element_unique_hashes(&self, filter: &mut selectors::bloom::BloomFilter) -> bool {
-        #[cfg(feature = "bloom-filter")]
-        {
-            // Add tag name hash (always present)
-            filter.insert_hash(self.name.local.precomputed_hash());
-
-            // Add ID hash if present
-            if let Some(id) = self.attributes.borrow().get(local_name!("id")) {
-                filter.insert_hash(LocalName::from(id).precomputed_hash());
-            }
-
-            // Add class hashes
-            if let Some(classes) = self.attributes.borrow().get(local_name!("class")) {
-                for class in classes.split(SELECTOR_WHITESPACE) {
-                    if !class.is_empty() {
-                        filter.insert_hash(LocalName::from(class).precomputed_hash());
-                    }
-                }
-            }
-
-            // We always add at least the tag name
-            true
-        }
-
-        #[cfg(not(feature = "bloom-filter"))]
-        {
-            let _ = filter; // Silence unused warning
-            false
-        }
+        let _ = filter; // Silence unused warning
+        false
     }
 }
 
