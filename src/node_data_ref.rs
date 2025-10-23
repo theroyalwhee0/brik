@@ -339,4 +339,114 @@ impl NodeDataRef<ElementData> {
     pub fn text_contents(&self) -> String {
         self.as_node().text_contents()
     }
+
+    /// Returns the namespace URI of the element.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let doc = parse_html().one("<div>Hello</div>");
+    /// let div = doc.select_first("div").unwrap();
+    /// // HTML elements use the XHTML namespace
+    /// assert_eq!(div.namespace_uri().as_ref(), "http://www.w3.org/1999/xhtml");
+    /// ```
+    #[inline]
+    pub fn namespace_uri(&self) -> &html5ever::Namespace {
+        (**self).namespace_uri()
+    }
+
+    /// Returns the local name of the element without any namespace prefix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let doc = parse_html().one("<div>Hello</div>");
+    /// let div = doc.select_first("div").unwrap();
+    /// assert_eq!(div.local_name().as_ref(), "div");
+    /// ```
+    #[inline]
+    pub fn local_name(&self) -> &html5ever::LocalName {
+        (**self).local_name()
+    }
+
+    /// Returns the namespace prefix of the element, if any.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let doc = parse_html().one("<div>Hello</div>");
+    /// let div = doc.select_first("div").unwrap();
+    /// // HTML elements typically have no prefix
+    /// assert_eq!(div.prefix(), None);
+    /// ```
+    #[inline]
+    pub fn prefix(&self) -> Option<&html5ever::Prefix> {
+        (**self).prefix()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parser::parse_html;
+    use crate::traits::*;
+
+    #[test]
+    fn node_data_ref_namespace_uri() {
+        let doc = parse_html().one(r#"<div>Test</div>"#);
+        let div = doc.select_first("div").unwrap();
+
+        // Should work without .as_element().unwrap()
+        assert_eq!(
+            div.namespace_uri().as_ref(),
+            "http://www.w3.org/1999/xhtml"
+        );
+    }
+
+    #[test]
+    fn node_data_ref_local_name() {
+        let doc = parse_html().one(r#"<span>Content</span>"#);
+        let span = doc.select_first("span").unwrap();
+
+        // Should work without .as_element().unwrap()
+        assert_eq!(span.local_name().as_ref(), "span");
+    }
+
+    #[test]
+    fn node_data_ref_prefix() {
+        let doc = parse_html().one(r#"<p>Paragraph</p>"#);
+        let p = doc.select_first("p").unwrap();
+
+        // Should work without .as_element().unwrap()
+        assert_eq!(p.prefix(), None);
+    }
+
+    #[test]
+    fn node_data_ref_svg_namespace() {
+        let svg_html = r#"<!DOCTYPE html>
+<html>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <circle r="50"/>
+</svg>
+</body>
+</html>"#;
+        let doc = parse_html().one(svg_html);
+        let circle = doc.select_first("circle").unwrap();
+
+        assert_eq!(
+            circle.namespace_uri().as_ref(),
+            "http://www.w3.org/2000/svg"
+        );
+        assert_eq!(circle.local_name().as_ref(), "circle");
+        assert_eq!(circle.prefix(), None);
+    }
 }
