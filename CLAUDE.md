@@ -16,7 +16,6 @@
 
 - **Minimize unsafe code**: Use `unsafe` only when necessary and document safety requirements
 - **Error handling**: Use `Result` types with descriptive errors
-- **Feature gates**: Use `#[cfg(feature = "...")]` for optional functionality (e.g., bloom-filter)
 - **Path parameters**: Use `<P: AsRef<Path>>` when functions accept paths
 - **Comments**: End comment sentences with periods for readability
 - **TODOs**: Format as `// TODO: {description}.` (sentence case, ends with period)
@@ -30,7 +29,6 @@
 ## Testing
 
 - Write unit tests in `#[cfg(test)]` modules
-- Test both with and without feature flags (e.g., `cargo test --features bloom-filter`)
 - Use `#[should_panic]` or `Result` types for error case testing
 
 ## Linting

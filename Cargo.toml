@@ -53,9 +53,6 @@ indexmap = "2.12.0"
 precomputed-hash = "0.1.1"
 
 [features]
-# Enable bloom filter optimization for faster selector matching.
-bloom-filter = []
-
 # Unsafe code policy:
 # - Default mode: Uses unsafe code for performance
 # - Safe mode: Build with --features safe to eliminate all unsafe blocks
