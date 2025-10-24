@@ -21,6 +21,7 @@ This fork maintains compatibility with current servo crates (html5ever, selector
 - 🌳 **Tree manipulation** - append, prepend, insert, detach nodes
 - 🔍 **Node inspection** - traverse ancestors, siblings, descendants
 - 📝 **Serialization** - convert trees back to HTML
+- 🔖 **Namespace support** - optional XML/SVG namespace handling (not enabled by default)
 - 🛡️ **Optional safe mode** - build without unsafe code
 
 ## Installation
@@ -31,7 +32,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-brik = "0.8"
+brik = "0.9"
 ```
 
 ### Migrating from Kuchiki or Kuchikiki
@@ -40,7 +41,7 @@ This migration applies to both Kuchiki and Kuchikiki.
 
 ```toml
 [dependencies]
-brik = "0.8"  # Changed from "kuchiki" or "kuchikiki"
+brik = "0.9"  # Changed from "kuchiki" or "kuchikiki"
 ```
 
 Update your code:
@@ -72,7 +73,7 @@ By default, brik uses unsafe code for performance. To build without any unsafe b
 
 ```toml
 [dependencies]
-brik = { version = "0.8", features = ["safe"] }
+brik = { version = "0.9", features = ["safe"] }
 ```
 
 Or via command line:
@@ -90,7 +91,7 @@ XML/SVG namespace support is available via the `namespaces` feature:
 
 ```toml
 [dependencies]
-brik = { version = "0.8", features = ["namespaces"] }
+brik = { version = "0.9", features = ["namespaces"] }
 ```
 
 This enables:
