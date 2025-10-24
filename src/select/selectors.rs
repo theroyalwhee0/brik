@@ -96,6 +96,9 @@ impl Selectors {
     /// This method allows selectors to use namespace prefixes in both type selectors
     /// (e.g., `svg|rect`) and attribute selectors (e.g., `[tmpl|if]`).
     ///
+    /// **Note:** Namespace-aware selector features require the `namespaces` feature to be enabled.
+    /// Without the feature, namespace prefixes in selectors will fail to parse or match.
+    ///
     /// This is the recommended method when using namespace-aware selectors.
     ///
     /// # Arguments
@@ -106,6 +109,8 @@ impl Selectors {
     /// # Examples
     ///
     /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
     /// use brik::{Selectors, SelectorContext};
     /// use html5ever::ns;
     ///
@@ -114,6 +119,7 @@ impl Selectors {
     ///
     /// // Select SVG rect elements
     /// let selectors = Selectors::compile_with_context("svg|rect", &context).unwrap();
+    /// }
     /// ```
     ///
     /// # Errors

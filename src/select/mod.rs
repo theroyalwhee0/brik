@@ -38,9 +38,12 @@ mod tests {
     use super::*;
     use crate::parser::parse_html;
     use crate::traits::*;
-    use html5ever::{local_name, ns, Namespace};
+    use html5ever::local_name;
+    #[cfg(feature = "namespaces")]
+    use html5ever::{ns, Namespace};
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn namespace_type_selector() {
         let html = r#"<!DOCTYPE html>
 <html>
@@ -77,6 +80,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn namespace_attribute_selector() {
         let html = r##"<!DOCTYPE html>
 <html xmlns:custom="http://example.com/custom">
@@ -108,6 +112,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn namespace_selector_undefined_prefix() {
         let context = SelectorContext::new(); // Empty context
 
@@ -133,6 +138,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn namespace_context_builder_pattern() {
         let mut context = SelectorContext::new();
         context

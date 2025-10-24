@@ -11,6 +11,7 @@ mod descendants;
 /// Element iterator trait.
 mod element_iterator;
 /// Element-related iterator.
+#[cfg(feature = "namespaces")]
 mod elements_in_namespace;
 /// Filter-map iterators for elements, comments, and text nodes.
 mod filter_iterators;
@@ -30,6 +31,7 @@ mod traverse;
 pub use ancestors::Ancestors;
 pub use descendants::Descendants;
 pub use element_iterator::ElementIterator;
+#[cfg(feature = "namespaces")]
 pub use elements_in_namespace::ElementsInNamespace;
 pub use filter_iterators::{Comments, Elements, TextNodes};
 pub use node_edge::NodeEdge;
@@ -44,6 +46,7 @@ mod tests {
     use crate::traits::*;
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn elements_in_ns_filters_by_namespace() {
         let html = r#"<!DOCTYPE html>
 <html>
@@ -71,6 +74,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn elements_in_ns_empty_when_no_match() {
         let html = r#"<div><p>Only HTML elements</p></div>"#;
         let doc = parse_html().one(html);
@@ -85,6 +89,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn elements_in_ns_works_with_nested_elements() {
         let html = r#"<!DOCTYPE html>
 <html>
@@ -111,6 +116,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn elements_in_ns_double_ended_iteration() {
         let html = r#"<!DOCTYPE html>
 <html>
@@ -175,6 +181,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn detach_all_with_mixed_namespaces() {
         let html = r#"<!DOCTYPE html>
 <html>

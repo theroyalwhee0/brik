@@ -84,6 +84,32 @@ cargo test --features safe
 
 **Note:** This only affects brik's code, not its dependencies.
 
+### Namespace Support
+
+XML/SVG namespace support is available via the `namespaces` feature:
+
+```toml
+[dependencies]
+brik = { version = "0.8", features = ["namespaces"] }
+```
+
+This enables:
+
+- Namespace-aware CSS selectors (e.g., `svg|rect`, `[xlink|href]`)
+- Element namespace inspection methods (`namespace_uri()`, `prefix()`)
+- Namespace-aware attribute methods (`get_ns()`, `insert_ns()`, etc.)
+- Filtering elements by namespace
+
+Or via command line:
+
+```bash
+cargo build --features namespaces
+cargo test --features namespaces
+cargo run --example namespaces --features namespaces
+```
+
+**Note:** HTML-only users can omit this feature to reduce binary size.
+
 ## Documentation
 
 Full API documentation is available at [docs.rs/brik](https://docs.rs/brik).

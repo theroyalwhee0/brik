@@ -362,9 +362,13 @@ impl NodeDataRef<ElementData> {
 
     /// Returns the namespace URI of the element.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
     /// use brik::parse_html;
     /// use brik::traits::*;
     ///
@@ -372,8 +376,10 @@ impl NodeDataRef<ElementData> {
     /// let div = doc.select_first("div").unwrap();
     /// // HTML elements use the XHTML namespace
     /// assert_eq!(div.namespace_uri().as_ref(), "http://www.w3.org/1999/xhtml");
+    /// }
     /// ```
     #[inline]
+    #[cfg(feature = "namespaces")]
     pub fn namespace_uri(&self) -> &html5ever::Namespace {
         (**self).namespace_uri()
     }
@@ -397,9 +403,13 @@ impl NodeDataRef<ElementData> {
 
     /// Returns the namespace prefix of the element, if any.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
     /// use brik::parse_html;
     /// use brik::traits::*;
     ///
@@ -407,8 +417,10 @@ impl NodeDataRef<ElementData> {
     /// let div = doc.select_first("div").unwrap();
     /// // HTML elements typically have no prefix
     /// assert_eq!(div.prefix(), None);
+    /// }
     /// ```
     #[inline]
+    #[cfg(feature = "namespaces")]
     pub fn prefix(&self) -> Option<&html5ever::Prefix> {
         (**self).prefix()
     }
@@ -420,6 +432,7 @@ mod tests {
     use crate::traits::*;
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn node_data_ref_namespace_uri() {
         let doc = parse_html().one(r#"<div>Test</div>"#);
         let div = doc.select_first("div").unwrap();
@@ -438,6 +451,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn node_data_ref_prefix() {
         let doc = parse_html().one(r#"<p>Paragraph</p>"#);
         let p = doc.select_first("p").unwrap();
@@ -447,6 +461,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn node_data_ref_svg_namespace() {
         let svg_html = r#"<!DOCTYPE html>
 <html>

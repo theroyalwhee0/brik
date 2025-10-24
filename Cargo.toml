@@ -15,6 +15,18 @@ edition = "2018"
 [lib]
 name = "brik"
 
+[[example]]
+name = "namespaces"
+required-features = ["namespaces"]
+
+[[example]]
+name = "namespace_selectors"
+required-features = ["namespaces"]
+
+[[example]]
+name = "template_processing"
+required-features = ["namespaces"]
+
 [lints.rust]
 unsafe_code = "deny"
 missing_docs = "deny"
@@ -54,8 +66,16 @@ indexmap = "2.12.0"
 precomputed-hash = "0.1.1"
 
 [features]
+default = []
+full = ["namespaces"]
 # Unsafe code policy:
 # - Default mode: Uses unsafe code for performance
 # - Safe mode: Build with --features safe to eliminate all unsafe blocks
 # Note: This only affects brik's code, not its dependencies.
 safe = []
+
+# Namespace support:
+# - Default mode: Namespace support is disabled
+# - Namespace mode: Build with --features namespaces to enable XML/SVG namespace support
+# Note: HTML-only users can disable this to reduce binary size.
+namespaces = []

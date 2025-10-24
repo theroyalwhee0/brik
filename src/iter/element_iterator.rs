@@ -1,7 +1,10 @@
-use super::{ElementsInNamespace, Select};
+use super::Select;
 use crate::node_data_ref::NodeDataRef;
 use crate::select::Selectors;
 use crate::tree::ElementData;
+
+#[cfg(feature = "namespaces")]
+use super::ElementsInNamespace;
 
 /// Convenience methods for element iterators.
 pub trait ElementIterator: Sized + Iterator<Item = NodeDataRef<ElementData>> {
@@ -20,13 +23,16 @@ pub trait ElementIterator: Sized + Iterator<Item = NodeDataRef<ElementData>> {
 
     /// Filter this element iterator to elements in the given namespace.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
     /// # #[macro_use] extern crate html5ever;
-    /// use brik::parse_html;
-    /// use brik::traits::*;
-    ///
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// # use brik::parse_html;
+    /// # use brik::traits::*;
     /// let html = r#"<!DOCTYPE html>
     /// <html>
     /// <body>
@@ -49,8 +55,10 @@ pub trait ElementIterator: Sized + Iterator<Item = NodeDataRef<ElementData>> {
     ///     .collect();
     ///
     /// assert_eq!(svg_elements.len(), 3); // svg, circle, rect
+    /// }
     /// ```
     #[inline]
+    #[cfg(feature = "namespaces")]
     fn elements_in_ns(self, namespace: html5ever::Namespace) -> ElementsInNamespace<Self> {
         ElementsInNamespace {
             iter: self,
