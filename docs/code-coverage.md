@@ -163,5 +163,5 @@ If CI fails due to coverage:
 
 ## Related Documentation
 
-- [Contributing Guide](../CONTRIBUTING.md) - Contribution workflow (if exists)
+- [Contributing Guide](../CONTRIBUTING.md) - Contribution workflow
 - [cargo-llvm-cov Documentation](https://github.com/taiki-e/cargo-llvm-cov)

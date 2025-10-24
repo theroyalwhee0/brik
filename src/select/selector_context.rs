@@ -3,8 +3,7 @@ use html5ever::Namespace;
 /// Context for compiling CSS selectors.
 ///
 /// This struct holds configuration that affects how selectors are parsed and matched.
-/// Currently, it provides namespace prefix mappings for namespace-aware selector matching,
-/// and is designed to support additional selector configuration in future releases.
+/// Currently, it provides namespace prefix mappings for namespace-aware selector matching.
 ///
 /// **Note:** While `SelectorContext` is always available for API consistency, namespace-related
 /// features (prefix mappings and default namespace) only have an effect when the `namespaces`
