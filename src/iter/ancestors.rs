@@ -4,6 +4,10 @@ use crate::tree::NodeRef;
 #[derive(Debug, Clone)]
 pub struct Ancestors(pub(super) Option<NodeRef>);
 
+/// Implements Iterator for Ancestors.
+///
+/// Yields ancestor nodes in order from parent to root, traversing up
+/// the tree until the document node is reached.
 impl Iterator for Ancestors {
     type Item = NodeRef;
 
@@ -20,6 +24,10 @@ mod tests {
     use crate::html5ever::tendril::TendrilSink;
     use crate::parse_html;
 
+    /// Tests that `ancestors()` iterates through all ancestor nodes.
+    ///
+    /// Creates a nested HTML structure and verifies that the iterator
+    /// yields all ancestors in order from parent to document root.
     #[test]
     fn ancestors_iteration() {
         let html = r#"
@@ -58,6 +66,10 @@ mod tests {
         assert!(ancestors[4].as_document().is_some());
     }
 
+    /// Tests that `ancestors()` returns empty iterator for root nodes.
+    ///
+    /// The document node has no parent, so its ancestors iterator
+    /// should yield no items.
     #[test]
     fn ancestors_root_node() {
         let doc = parse_html().one("<html></html>");
@@ -67,6 +79,10 @@ mod tests {
         assert_eq!(ancestors.len(), 0);
     }
 
+    /// Tests that `Ancestors` iterator can be cloned.
+    ///
+    /// Verifies that cloning an iterator produces an independent copy
+    /// that yields the same sequence of nodes.
     #[test]
     fn ancestors_clone() {
         let html = "<div><p><span>text</span></p></div>";

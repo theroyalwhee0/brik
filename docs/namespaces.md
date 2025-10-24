@@ -363,10 +363,6 @@ attrs.get_ns(ns!(), "width");  // Works for both HTML and SVG
 // XLink attributes (rarely used in HTML5) would be in the XLink namespace
 ```
 
-### XML Mode
-
-For full namespace prefix preservation, parse as XML (not currently supported). HTML5 parsing follows the HTML5 specification's namespace assignment rules.
-
 ## See Also
 
 - [html5ever documentation](https://docs.rs/html5ever/) - Parser behavior and namespace handling
