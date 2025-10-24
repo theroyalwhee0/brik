@@ -189,3 +189,215 @@ impl fmt::Debug for Selectors {
         fmt::Display::fmt(self, f)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::html5ever::tendril::TendrilSink;
+    use crate::iter::NodeIterator;
+    use crate::parse_html;
+
+    #[test]
+    fn compile_simple_selector() {
+        let selectors = Selectors::compile("div").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_multiple_selectors() {
+        let selectors = Selectors::compile("div, p, span").unwrap();
+        assert_eq!(selectors.0.len(), 3);
+    }
+
+    #[test]
+    fn compile_class_selector() {
+        let selectors = Selectors::compile(".myClass").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_id_selector() {
+        let selectors = Selectors::compile("#myId").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_any_link() {
+        let selectors = Selectors::compile("a:any-link").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_link() {
+        let selectors = Selectors::compile("a:link").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_visited() {
+        let selectors = Selectors::compile("a:visited").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_active() {
+        let selectors = Selectors::compile("button:active").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_focus() {
+        let selectors = Selectors::compile("input:focus").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_hover() {
+        let selectors = Selectors::compile("div:hover").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_enabled() {
+        let selectors = Selectors::compile("input:enabled").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_disabled() {
+        let selectors = Selectors::compile("input:disabled").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_checked() {
+        let selectors = Selectors::compile("input:checked").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_pseudo_class_indeterminate() {
+        let selectors = Selectors::compile("input:indeterminate").unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn compile_unsupported_pseudo_class() {
+        let result = Selectors::compile(":unsupported");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn compile_invalid_syntax() {
+        let result = Selectors::compile(":::");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn matches_true() {
+        let html = r#"<div class="test">content</div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let selectors = Selectors::compile(".test").unwrap();
+        assert!(selectors.matches(&div));
+    }
+
+    #[test]
+    fn matches_false() {
+        let html = r#"<div class="test">content</div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let selectors = Selectors::compile(".other").unwrap();
+        assert!(!selectors.matches(&div));
+    }
+
+    #[test]
+    fn matches_multiple_selectors() {
+        let html = r#"<div class="test">content</div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let selectors = Selectors::compile(".other, .test").unwrap();
+        assert!(selectors.matches(&div));
+    }
+
+    #[test]
+    fn filter() {
+        let html = r#"<div><p class="keep">1</p><span>2</span><p class="keep">3</p></div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let selectors = Selectors::compile(".keep").unwrap();
+        let filtered: Vec<_> = selectors
+            .filter(div.as_node().descendants().elements())
+            .collect();
+
+        assert_eq!(filtered.len(), 2);
+        assert!(filtered.iter().all(|e| e.name.local.as_ref() == "p"));
+    }
+
+    #[test]
+    fn from_str() {
+        let selectors: Selectors = "div.test".parse().unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    fn from_str_error() {
+        let result: Result<Selectors, ()> = ":::".parse();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn display_single() {
+        let selectors = Selectors::compile("div").unwrap();
+        let display = format!("{selectors}");
+        assert_eq!(display, "div");
+    }
+
+    #[test]
+    fn display_multiple() {
+        let selectors = Selectors::compile("div, p").unwrap();
+        let display = format!("{selectors}");
+        assert!(display.contains("div"));
+        assert!(display.contains("p"));
+        assert!(display.contains(", "));
+    }
+
+    #[test]
+    fn debug() {
+        let selectors = Selectors::compile("div.test").unwrap();
+        let debug = format!("{selectors:?}");
+        assert!(debug.contains("div"));
+        assert!(debug.contains("test"));
+    }
+
+    #[test]
+    #[cfg(feature = "namespaces")]
+    fn compile_with_context_namespace() {
+        let mut context = SelectorContext::new();
+        context.add_namespace("svg".to_string(), html5ever::ns!(svg));
+
+        let selectors = Selectors::compile_with_context("svg|rect", &context).unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+
+    #[test]
+    #[cfg(feature = "namespaces")]
+    fn compile_with_context_undefined_namespace() {
+        let context = SelectorContext::new();
+
+        let result = Selectors::compile_with_context("svg|rect", &context);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn compile_with_context_no_namespace() {
+        let context = SelectorContext::default();
+
+        let selectors = Selectors::compile_with_context("div", &context).unwrap();
+        assert_eq!(selectors.0.len(), 1);
+    }
+}

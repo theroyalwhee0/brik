@@ -232,3 +232,200 @@ impl NodeRef {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::html5ever::tendril::TendrilSink;
+    use crate::parse_html;
+
+    #[test]
+    fn new_element() {
+        let element =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+
+        assert!(element.as_element().is_some());
+        assert_eq!(element.as_element().unwrap().name.local.as_ref(), "div");
+    }
+
+    #[test]
+    fn new_text() {
+        let text = NodeRef::new_text("Hello World");
+
+        assert!(text.as_text().is_some());
+        assert_eq!(&*text.as_text().unwrap().borrow(), "Hello World");
+    }
+
+    #[test]
+    fn new_comment() {
+        let comment = NodeRef::new_comment("This is a comment");
+
+        assert!(comment.as_comment().is_some());
+        assert_eq!(
+            &*comment.as_comment().unwrap().borrow(),
+            "This is a comment"
+        );
+    }
+
+    #[test]
+    fn new_processing_instruction() {
+        let pi = NodeRef::new_processing_instruction("xml-stylesheet", "href='style.css'");
+
+        assert!(pi.as_processing_instruction().is_some());
+        let pi_data = pi.as_processing_instruction().unwrap().borrow();
+        assert_eq!(pi_data.0, "xml-stylesheet");
+        assert_eq!(pi_data.1, "href='style.css'");
+    }
+
+    #[test]
+    fn new_doctype() {
+        let doctype = NodeRef::new_doctype("html", "", "");
+
+        assert!(doctype.as_doctype().is_some());
+        assert_eq!(&*doctype.as_doctype().unwrap().name, "html");
+    }
+
+    #[test]
+    fn new_document() {
+        let doc = NodeRef::new_document();
+
+        assert!(doc.as_document().is_some());
+    }
+
+    #[test]
+    fn text_contents() {
+        let doc = parse_html().one(r#"<div>Hello <b>World</b>!</div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        assert_eq!(div.as_node().text_contents(), "Hello World!");
+    }
+
+    #[test]
+    fn append() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child1 = NodeRef::new_text("First");
+        let child2 = NodeRef::new_text("Second");
+
+        parent.append(child1.clone());
+        parent.append(child2.clone());
+
+        assert_eq!(parent.first_child().unwrap(), child1);
+        assert_eq!(parent.last_child().unwrap(), child2);
+        assert_eq!(child1.next_sibling().unwrap(), child2);
+    }
+
+    #[test]
+    fn prepend() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child1 = NodeRef::new_text("First");
+        let child2 = NodeRef::new_text("Second");
+
+        parent.append(child1.clone());
+        parent.prepend(child2.clone());
+
+        assert_eq!(parent.first_child().unwrap(), child2);
+        assert_eq!(parent.last_child().unwrap(), child1);
+        assert_eq!(child2.next_sibling().unwrap(), child1);
+    }
+
+    #[test]
+    fn insert_after() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child1 = NodeRef::new_text("First");
+        let child2 = NodeRef::new_text("Second");
+        let child3 = NodeRef::new_text("Third");
+
+        parent.append(child1.clone());
+        parent.append(child3.clone());
+        child1.insert_after(child2.clone());
+
+        let children: Vec<_> = parent.children().collect();
+        assert_eq!(children.len(), 3);
+        assert_eq!(children[0], child1);
+        assert_eq!(children[1], child2);
+        assert_eq!(children[2], child3);
+    }
+
+    #[test]
+    fn insert_before() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child1 = NodeRef::new_text("First");
+        let child2 = NodeRef::new_text("Second");
+        let child3 = NodeRef::new_text("Third");
+
+        parent.append(child1.clone());
+        parent.append(child3.clone());
+        child3.insert_before(child2.clone());
+
+        let children: Vec<_> = parent.children().collect();
+        assert_eq!(children.len(), 3);
+        assert_eq!(children[0], child1);
+        assert_eq!(children[1], child2);
+        assert_eq!(children[2], child3);
+    }
+
+    #[test]
+    fn detach() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child1 = NodeRef::new_text("First");
+        let child2 = NodeRef::new_text("Second");
+        let child3 = NodeRef::new_text("Third");
+
+        parent.append(child1.clone());
+        parent.append(child2.clone());
+        parent.append(child3.clone());
+
+        child2.detach();
+
+        let children: Vec<_> = parent.children().collect();
+        assert_eq!(children.len(), 2);
+        assert_eq!(children[0], child1);
+        assert_eq!(children[1], child3);
+        assert!(child2.parent().is_none());
+    }
+
+    #[test]
+    fn prepend_to_empty() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child = NodeRef::new_text("Only child");
+
+        parent.prepend(child.clone());
+
+        assert_eq!(parent.first_child().unwrap(), child);
+        assert_eq!(parent.last_child().unwrap(), child);
+    }
+
+    #[test]
+    fn insert_after_as_last_child() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child1 = NodeRef::new_text("First");
+        let child2 = NodeRef::new_text("Last");
+
+        parent.append(child1.clone());
+        child1.insert_after(child2.clone());
+
+        assert_eq!(parent.last_child().unwrap(), child2);
+        assert!(child2.next_sibling().is_none());
+    }
+
+    #[test]
+    fn insert_before_as_first_child() {
+        let parent =
+            NodeRef::new_element(QualName::new(None, ns!(html), local_name!("div")), vec![]);
+        let child1 = NodeRef::new_text("Second");
+        let child2 = NodeRef::new_text("First");
+
+        parent.append(child1.clone());
+        child1.insert_before(child2.clone());
+
+        assert_eq!(parent.first_child().unwrap(), child2);
+        assert!(child2.previous_sibling().is_none());
+    }
+}

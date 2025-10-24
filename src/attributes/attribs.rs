@@ -322,11 +322,8 @@ impl Attributes {
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "namespaces")]
     use super::*;
-    #[cfg(feature = "namespaces")]
     use crate::parser::parse_html;
-    #[cfg(feature = "namespaces")]
     use crate::traits::*;
 
     #[test]
@@ -608,5 +605,56 @@ mod tests {
 
         // Regular attribute should still be there
         assert_eq!(attrs.get("class"), Some("test"));
+    }
+
+    #[test]
+    fn get_mut_modifies_attribute() {
+        let doc = parse_html().one(r#"<div class="old">Content</div>"#);
+        let div = doc.select_first("div").unwrap();
+        let mut attrs = div.attributes.borrow_mut();
+
+        if let Some(value) = attrs.get_mut("class") {
+            *value = "new".to_string();
+        }
+
+        assert_eq!(attrs.get("class"), Some("new"));
+    }
+
+    #[test]
+    fn get_mut_returns_none_for_missing() {
+        let doc = parse_html().one(r#"<div>Content</div>"#);
+        let div = doc.select_first("div").unwrap();
+        let mut attrs = div.attributes.borrow_mut();
+
+        assert!(attrs.get_mut("nonexistent").is_none());
+    }
+
+    #[test]
+    fn entry_insert_new_attribute() {
+        let doc = parse_html().one(r#"<div>Content</div>"#);
+        let div = doc.select_first("div").unwrap();
+        let mut attrs = div.attributes.borrow_mut();
+
+        attrs.entry("class").or_insert(Attribute {
+            prefix: None,
+            value: "test".to_string(),
+        });
+
+        assert_eq!(attrs.get("class"), Some("test"));
+    }
+
+    #[test]
+    fn entry_existing_attribute() {
+        let doc = parse_html().one(r#"<div class="existing">Content</div>"#);
+        let div = doc.select_first("div").unwrap();
+        let mut attrs = div.attributes.borrow_mut();
+
+        attrs.entry("class").or_insert(Attribute {
+            prefix: None,
+            value: "new".to_string(),
+        });
+
+        // Should keep existing value
+        assert_eq!(attrs.get("class"), Some("existing"));
     }
 }

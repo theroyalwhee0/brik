@@ -224,3 +224,106 @@ impl Node {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::html5ever::tendril::TendrilSink;
+    use crate::parse_html;
+
+    #[test]
+    fn as_text() {
+        let html = "<div>text content</div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let text_node = div.as_node().first_child().unwrap();
+        assert!(text_node.as_text().is_some());
+        assert_eq!(&*text_node.as_text().unwrap().borrow(), "text content");
+    }
+
+    #[test]
+    fn as_comment() {
+        let html = "<!-- comment text --><div></div>";
+        let doc = parse_html().one(html);
+
+        let comment_node = doc.first_child().unwrap();
+        assert!(comment_node.as_comment().is_some());
+        assert_eq!(
+            &*comment_node.as_comment().unwrap().borrow(),
+            " comment text "
+        );
+    }
+
+    #[test]
+    fn as_doctype() {
+        let html = "<!DOCTYPE html><html></html>";
+        let doc = parse_html().one(html);
+
+        let doctype_node = doc.first_child().unwrap();
+        let doctype = doctype_node.as_doctype();
+        assert!(doctype.is_some());
+        assert_eq!(&*doctype.unwrap().name, "html");
+    }
+
+    #[test]
+    fn as_document() {
+        let html = "<html></html>";
+        let doc = parse_html().one(html);
+
+        assert!(doc.as_document().is_some());
+    }
+
+    #[test]
+    fn as_processing_instruction() {
+        let html = r#"<?xml-stylesheet href="style.css"?><div></div>"#;
+        let doc = parse_html().one(html);
+
+        // HTML parser doesn't create PI nodes, so test None case
+        let div = doc.select("div").unwrap().next().unwrap();
+        assert!(div.as_node().as_processing_instruction().is_none());
+    }
+
+    #[test]
+    fn as_document_fragment() {
+        let html = "<div></div>";
+        let doc = parse_html().one(html);
+
+        // Document nodes are not fragments
+        assert!(doc.as_document_fragment().is_none());
+    }
+
+    #[test]
+    fn previous_sibling() {
+        let html = "<div><p>1</p><span>2</span></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let span = div.as_node().last_child().unwrap();
+        let previous = span.previous_sibling();
+        assert!(previous.is_some());
+        assert_eq!(
+            previous.unwrap().as_element().unwrap().name.local.as_ref(),
+            "p"
+        );
+    }
+
+    #[test]
+    fn previous_sibling_none() {
+        let html = "<div><p>first</p></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let first_child = div.as_node().first_child().unwrap();
+        assert!(first_child.previous_sibling().is_none());
+    }
+
+    #[test]
+    fn debug_format() {
+        let html = "<div></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let debug_str = format!("{:?}", div.as_node());
+        assert!(debug_str.contains("Element"));
+    }
+}

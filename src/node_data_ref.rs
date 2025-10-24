@@ -481,4 +481,150 @@ mod tests {
         assert_eq!(circle.local_name().as_ref(), "circle");
         assert_eq!(circle.prefix(), None);
     }
+
+    #[test]
+    fn into_element_ref_some() {
+        let doc = parse_html().one(r#"<div>Content</div>"#);
+        let div_node = doc.select("div").unwrap().next().unwrap().as_node().clone();
+
+        let element_ref = div_node.into_element_ref();
+        assert!(element_ref.is_some());
+        assert_eq!(element_ref.unwrap().name.local.as_ref(), "div");
+    }
+
+    #[test]
+    fn into_element_ref_none() {
+        let doc = parse_html().one(r#"<div>text</div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+        let text_node = div.as_node().first_child().unwrap();
+
+        let element_ref = text_node.into_element_ref();
+        assert!(element_ref.is_none());
+    }
+
+    #[test]
+    fn into_text_ref_some() {
+        let doc = parse_html().one(r#"<div>text content</div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+        let text_node = div.as_node().first_child().unwrap();
+
+        let text_ref = text_node.into_text_ref();
+        assert!(text_ref.is_some());
+        assert_eq!(&*text_ref.unwrap().borrow(), "text content");
+    }
+
+    #[test]
+    fn into_text_ref_none() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let text_ref = div.as_node().clone().into_text_ref();
+        assert!(text_ref.is_none());
+    }
+
+    #[test]
+    fn into_comment_ref_some() {
+        let doc = parse_html().one(r#"<!-- comment --><div></div>"#);
+        let comment_node = doc.first_child().unwrap();
+
+        let comment_ref = comment_node.into_comment_ref();
+        assert!(comment_ref.is_some());
+        assert_eq!(&*comment_ref.unwrap().borrow(), " comment ");
+    }
+
+    #[test]
+    fn into_comment_ref_none() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let comment_ref = div.as_node().clone().into_comment_ref();
+        assert!(comment_ref.is_none());
+    }
+
+    #[test]
+    fn into_doctype_ref_some() {
+        let doc = parse_html().one(r#"<!DOCTYPE html><html></html>"#);
+        let doctype_node = doc.first_child().unwrap();
+
+        let doctype_ref = doctype_node.into_doctype_ref();
+        assert!(doctype_ref.is_some());
+        assert_eq!(&*doctype_ref.unwrap().name, "html");
+    }
+
+    #[test]
+    fn into_doctype_ref_none() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let doctype_ref = div.as_node().clone().into_doctype_ref();
+        assert!(doctype_ref.is_none());
+    }
+
+    #[test]
+    fn into_document_ref_some() {
+        let doc = parse_html().one(r#"<html></html>"#);
+
+        let document_ref = doc.into_document_ref();
+        assert!(document_ref.is_some());
+    }
+
+    #[test]
+    fn into_document_ref_none() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let document_ref = div.as_node().clone().into_document_ref();
+        assert!(document_ref.is_none());
+    }
+
+    #[test]
+    fn into_processing_instruction_ref_none() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let pi_ref = div.as_node().clone().into_processing_instruction_ref();
+        assert!(pi_ref.is_none());
+    }
+
+    #[test]
+    fn into_document_fragment_ref_none() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let frag_ref = div.as_node().clone().into_document_fragment_ref();
+        assert!(frag_ref.is_none());
+    }
+
+    #[test]
+    fn text_contents() {
+        let doc = parse_html().one(r#"<div>Hello <b>World</b>!</div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        assert_eq!(div.text_contents(), "Hello World!");
+    }
+
+    #[test]
+    fn text_contents_nested() {
+        let doc = parse_html().one(r#"<div><p>A</p><span>B<i>C</i></span>D</div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        assert_eq!(div.text_contents(), "ABCD");
+    }
+
+    #[test]
+    fn text_contents_empty() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        assert_eq!(div.text_contents(), "");
+    }
+
+    #[test]
+    fn as_node() {
+        let doc = parse_html().one(r#"<div></div>"#);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let node = div.as_node();
+        assert!(node.as_element().is_some());
+    }
 }
