@@ -1,6 +1,15 @@
 //! Specialized methods for `Cell` of some specific `!Copy` types,
 //! allowing limited access to a value without moving it of the cell.
 //!
+//! This module contains three extension traits grouped together for cohesion:
+//! - `CellOption`
+//! - `CellOptionWeak<T>`
+//! - `CellOptionRc<T>`
+//!
+//! These traits are kept in a single file as they are closely related extension
+//! traits for Cell operations, following the project's guideline that allows
+//! logical grouping of related items.
+//!
 //!
 //! # Soundness
 //!
