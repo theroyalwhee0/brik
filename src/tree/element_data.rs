@@ -19,6 +19,10 @@ pub struct ElementData {
     pub template_contents: Option<NodeRef>,
 }
 
+/// Methods for ElementData.
+///
+/// Provides accessors for element name components including
+/// namespace URI, local name, and prefix.
 impl ElementData {
     /// Returns the namespace URI of the element.
     ///
@@ -91,6 +95,10 @@ mod tests {
     use crate::parser::parse_html;
     use crate::traits::*;
 
+    /// Tests that `namespace_uri()` returns the correct namespace for elements.
+    ///
+    /// Verifies both HTML elements (XHTML namespace) and SVG elements
+    /// (SVG namespace) return their correct namespace URIs.
     #[test]
     #[cfg(feature = "namespaces")]
     fn element_namespace_uri() {
@@ -120,6 +128,10 @@ mod tests {
         );
     }
 
+    /// Tests that `local_name()` returns the element tag name without namespace.
+    ///
+    /// Verifies that local_name returns just the tag name (e.g., "div", "body")
+    /// without any namespace prefix or URI.
     #[test]
     fn element_local_name() {
         let html = r"<!DOCTYPE html><html><body><div class='test'>Content</div></body></html>";
@@ -131,6 +143,10 @@ mod tests {
         assert_eq!(body.local_name().as_ref(), "body");
     }
 
+    /// Tests that `prefix()` returns None for elements without namespace prefixes.
+    ///
+    /// In HTML5, elements typically don't have namespace prefixes even when
+    /// they're in specific namespaces (like SVG or MathML).
     #[test]
     #[cfg(feature = "namespaces")]
     fn element_prefix() {

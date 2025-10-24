@@ -53,6 +53,10 @@ mod tests {
     use crate::iter::NodeIterator;
     use crate::parse_html;
 
+    /// Tests forward iteration through selected elements.
+    ///
+    /// Verifies that Select iterator correctly filters elements matching
+    /// a CSS selector in forward order.
     #[test]
     fn select_forward() {
         let html = r#"<div><p class="test">1</p><span>2</span><p class="test">3</p></div>"#;
@@ -70,6 +74,10 @@ mod tests {
         assert!(select.next().is_none());
     }
 
+    /// Tests backward iteration through selected elements.
+    ///
+    /// Verifies that Select iterator correctly filters elements matching
+    /// a CSS selector in reverse order using next_back().
     #[test]
     fn select_backward() {
         let html = r#"<div><p class="test">1</p><span>2</span><p class="test">3</p></div>"#;
@@ -87,6 +95,10 @@ mod tests {
         assert!(select.next_back().is_none());
     }
 
+    /// Tests select iterator with no matching elements.
+    ///
+    /// Verifies that Select iterator returns None when no elements
+    /// match the given selector.
     #[test]
     fn select_no_matches() {
         let html = "<div><p>1</p><span>2</span></div>";

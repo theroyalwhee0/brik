@@ -8,11 +8,58 @@
 
 ## Documentation Standards
 
-- **Comprehensive coverage**: All public items should be documented
+### Public API Documentation
+
+- **Comprehensive coverage**: All public items should be documented with `///` doc comments
 - Include `# Errors`, `# Panics`, and `# Safety` sections where applicable
-- Document test panic expectations
 - **Documentation Accuracy**: Document only current features; do not document future plans unless imminent (use TODO comments for future work)
 - All linting rules are defined in `Cargo.toml`
+
+### Implementation Block Documentation
+
+- **All impl blocks must be documented**, even for standard trait implementations:
+  - Standard traits like `Debug`, `Display`, `Clone`, `Eq`, `PartialEq`, `Deref`, etc.
+  - Custom trait implementations
+  - Inherent impl blocks with methods
+- **Format**: Add a `///` doc comment above the impl block explaining its purpose:
+
+  ```rust
+  /// Implements Display for NodeData.
+  ///
+  /// Formats the node data for display purposes, showing the node type
+  /// and relevant information based on the variant.
+  impl fmt::Display for NodeData {
+      // implementation
+  }
+  ```
+
+- **When to document**:
+  - Create documentation when writing new impl blocks
+  - Only add documentation where it's missing; do not rewrite existing good documentation
+  - If existing documentation is clear and accurate, leave it unchanged
+
+### Test Documentation
+
+- **Every test must have documentation** explaining what it tests and why:
+
+  ```rust
+  /// Tests cloning AttrValue instances.
+  ///
+  /// Verifies that the Clone implementation produces an independent
+  /// copy with identical contents.
+  #[test]
+  fn clone() {
+      // test implementation
+  }
+  ```
+
+- **Content guidelines**:
+  - First line: Brief summary starting with "Tests..." or "Verifies..."
+  - Second paragraph: Explain what behavior is being validated
+  - Mention edge cases, boundary conditions, or important invariants being tested
+  - End all sentences with periods
+- Document test panic expectations with `#[should_panic]` and explanation
+- **When to document**: Create test documentation when writing the test, not as a separate pass
 
 ## Code Quality
 
@@ -86,5 +133,5 @@
 
 - Run `cargo clippy --all-targets` before committing
 - Address all clippy warnings
-- See `Cargo.toml` for enabled lints (many documentation lints are currently disabled but should be enabled incrementally)
+- All documentation lints are enabled and enforced (see `[lints.rustdoc]` and `[lints.clippy]` in `Cargo.toml`)
 - Examples may use `#![allow(clippy::print_stdout)]` when appropriate

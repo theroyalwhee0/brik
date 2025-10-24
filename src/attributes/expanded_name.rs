@@ -9,6 +9,9 @@ pub struct ExpandedName {
     pub local: LocalName,
 }
 
+/// Methods for ExpandedName.
+///
+/// Provides construction of expanded names combining namespace and local name.
 impl ExpandedName {
     /// Trivial constructor
     pub fn new<N: Into<Namespace>, L: Into<LocalName>>(ns: N, local: L) -> Self {

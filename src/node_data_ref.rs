@@ -86,6 +86,9 @@ pub struct NodeDataRef<T> {
     _phantom: PhantomData<T>,
 }
 
+/// Core methods for NodeDataRef.
+///
+/// Provides construction and access methods for typed references to node data.
 impl<T> NodeDataRef<T> {
     /// Create a `NodeDataRef` for a component in a given node.
     #[inline]
@@ -180,6 +183,10 @@ impl<T> NodeDataRef<T> {
     }
 }
 
+/// Implements Deref for NodeDataRef (unsafe mode).
+///
+/// Allows transparent access to the underlying node data using unsafe
+/// pointer dereferencing for performance.
 // Generic Deref implementation for unsafe mode.
 #[cfg(not(feature = "safe"))]
 #[allow(unsafe_code)]
@@ -191,6 +198,10 @@ impl<T> Deref for NodeDataRef<T> {
     }
 }
 
+/// Implements Deref for NodeDataRef<ElementData> (safe mode).
+///
+/// Provides safe access to ElementData by using runtime type checking
+/// instead of raw pointer dereferencing.
 // Specialized Deref implementations for safe mode.
 #[cfg(feature = "safe")]
 impl Deref for NodeDataRef<ElementData> {
@@ -203,6 +214,10 @@ impl Deref for NodeDataRef<ElementData> {
     }
 }
 
+/// Implements Deref for NodeDataRef<RefCell<String>> (safe mode).
+///
+/// Provides safe access to text or comment node contents using runtime
+/// type discrimination.
 #[cfg(feature = "safe")]
 impl Deref for NodeDataRef<RefCell<String>> {
     type Target = RefCell<String>;
@@ -222,6 +237,9 @@ impl Deref for NodeDataRef<RefCell<String>> {
     }
 }
 
+/// Implements Deref for NodeDataRef<Doctype> (safe mode).
+///
+/// Provides safe access to Doctype node data using runtime type checking.
 #[cfg(feature = "safe")]
 impl Deref for NodeDataRef<Doctype> {
     type Target = Doctype;
@@ -233,6 +251,9 @@ impl Deref for NodeDataRef<Doctype> {
     }
 }
 
+/// Implements Deref for NodeDataRef<DocumentData> (safe mode).
+///
+/// Provides safe access to Document node data using runtime type checking.
 #[cfg(feature = "safe")]
 impl Deref for NodeDataRef<DocumentData> {
     type Target = DocumentData;
@@ -244,6 +265,10 @@ impl Deref for NodeDataRef<DocumentData> {
     }
 }
 
+/// Implements Deref for NodeDataRef<RefCell<(String, String)>> (safe mode).
+///
+/// Provides safe access to ProcessingInstruction node data using runtime
+/// type checking.
 #[cfg(feature = "safe")]
 impl Deref for NodeDataRef<RefCell<(String, String)>> {
     type Target = RefCell<(String, String)>;
@@ -255,6 +280,9 @@ impl Deref for NodeDataRef<RefCell<(String, String)>> {
     }
 }
 
+/// Implements Deref for NodeDataRef<()> (safe mode).
+///
+/// Provides safe access to DocumentFragment nodes using runtime type checking.
 #[cfg(feature = "safe")]
 impl Deref for NodeDataRef<()> {
     type Target = ();
@@ -266,6 +294,10 @@ impl Deref for NodeDataRef<()> {
     }
 }
 
+/// Implements PartialEq for NodeDataRef.
+///
+/// Compares NodeDataRef instances by comparing their underlying NodeRef,
+/// not the type parameter T. This avoids requiring T: PartialEq.
 // #[derive(PartialEq)] would compare both fields
 impl<T> PartialEq for NodeDataRef<T> {
     #[inline]
@@ -274,6 +306,10 @@ impl<T> PartialEq for NodeDataRef<T> {
     }
 }
 
+/// Implements Clone for NodeDataRef.
+///
+/// Clones the NodeDataRef by cloning the underlying NodeRef and copying
+/// the type information. Avoids requiring T: Clone.
 // #[derive(Clone)] would have an unnecessary `T: Clone` bound
 impl<T> Clone for NodeDataRef<T> {
     #[inline]
@@ -296,6 +332,9 @@ impl<T> Clone for NodeDataRef<T> {
     }
 }
 
+/// Implements Debug for NodeDataRef (unsafe mode).
+///
+/// Formats the referenced data for debugging using the data's Debug impl.
 // Generic Debug implementation for unsafe mode.
 #[cfg(not(feature = "safe"))]
 impl<T: fmt::Debug> fmt::Debug for NodeDataRef<T> {
@@ -305,6 +344,9 @@ impl<T: fmt::Debug> fmt::Debug for NodeDataRef<T> {
     }
 }
 
+/// Implements Debug for NodeDataRef<ElementData> (safe mode).
+///
+/// Formats ElementData for debugging by delegating to ElementData's Debug impl.
 // Specialized Debug implementations for safe mode.
 #[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<ElementData> {
@@ -314,6 +356,9 @@ impl fmt::Debug for NodeDataRef<ElementData> {
     }
 }
 
+/// Implements Debug for NodeDataRef<RefCell<String>> (safe mode).
+///
+/// Formats text or comment node contents for debugging.
 #[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<RefCell<String>> {
     #[inline]
@@ -322,6 +367,9 @@ impl fmt::Debug for NodeDataRef<RefCell<String>> {
     }
 }
 
+/// Implements Debug for NodeDataRef<Doctype> (safe mode).
+///
+/// Formats Doctype node data for debugging.
 #[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<Doctype> {
     #[inline]
@@ -330,6 +378,9 @@ impl fmt::Debug for NodeDataRef<Doctype> {
     }
 }
 
+/// Implements Debug for NodeDataRef<DocumentData> (safe mode).
+///
+/// Formats Document node data for debugging.
 #[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<DocumentData> {
     #[inline]
@@ -338,6 +389,9 @@ impl fmt::Debug for NodeDataRef<DocumentData> {
     }
 }
 
+/// Implements Debug for NodeDataRef<RefCell<(String, String)>> (safe mode).
+///
+/// Formats ProcessingInstruction node data for debugging.
 #[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<RefCell<(String, String)>> {
     #[inline]
@@ -346,6 +400,9 @@ impl fmt::Debug for NodeDataRef<RefCell<(String, String)>> {
     }
 }
 
+/// Implements Debug for NodeDataRef<()> (safe mode).
+///
+/// Formats DocumentFragment nodes for debugging.
 #[cfg(feature = "safe")]
 impl fmt::Debug for NodeDataRef<()> {
     #[inline]
@@ -354,6 +411,9 @@ impl fmt::Debug for NodeDataRef<()> {
     }
 }
 
+/// Element-specific methods for NodeDataRef<ElementData>.
+///
+/// Provides convenience methods for working with element nodes.
 impl NodeDataRef<ElementData> {
     /// Return the concatenation of all text nodes in this subtree.
     pub fn text_contents(&self) -> String {
@@ -431,6 +491,10 @@ mod tests {
     use crate::parser::parse_html;
     use crate::traits::*;
 
+    /// Tests namespace_uri convenience method.
+    ///
+    /// Verifies that namespace_uri() can be called directly on NodeDataRef
+    /// without needing to dereference.
     #[test]
     #[cfg(feature = "namespaces")]
     fn node_data_ref_namespace_uri() {
@@ -441,6 +505,10 @@ mod tests {
         assert_eq!(div.namespace_uri().as_ref(), "http://www.w3.org/1999/xhtml");
     }
 
+    /// Tests local_name convenience method.
+    ///
+    /// Verifies that local_name() can be called directly on NodeDataRef
+    /// without needing to dereference.
     #[test]
     fn node_data_ref_local_name() {
         let doc = parse_html().one(r#"<span>Content</span>"#);
@@ -450,6 +518,10 @@ mod tests {
         assert_eq!(span.local_name().as_ref(), "span");
     }
 
+    /// Tests prefix convenience method.
+    ///
+    /// Verifies that prefix() can be called directly on NodeDataRef
+    /// without needing to dereference.
     #[test]
     #[cfg(feature = "namespaces")]
     fn node_data_ref_prefix() {
@@ -460,6 +532,10 @@ mod tests {
         assert_eq!(p.prefix(), None);
     }
 
+    /// Tests namespace handling with SVG elements.
+    ///
+    /// Verifies that SVG namespace, local name, and prefix are correctly
+    /// accessible via NodeDataRef methods.
     #[test]
     #[cfg(feature = "namespaces")]
     fn node_data_ref_svg_namespace() {
@@ -482,6 +558,9 @@ mod tests {
         assert_eq!(circle.prefix(), None);
     }
 
+    /// Tests into_element_ref with element node.
+    ///
+    /// Verifies that into_element_ref returns Some when called on an element node.
     #[test]
     fn into_element_ref_some() {
         let doc = parse_html().one(r#"<div>Content</div>"#);
@@ -492,6 +571,9 @@ mod tests {
         assert_eq!(element_ref.unwrap().name.local.as_ref(), "div");
     }
 
+    /// Tests into_element_ref with non-element node.
+    ///
+    /// Verifies that into_element_ref returns None when called on a non-element node.
     #[test]
     fn into_element_ref_none() {
         let doc = parse_html().one(r#"<div>text</div>"#);
@@ -502,6 +584,10 @@ mod tests {
         assert!(element_ref.is_none());
     }
 
+    /// Tests into_text_ref with text node.
+    ///
+    /// Verifies that into_text_ref returns Some with the text contents when
+    /// called on a text node.
     #[test]
     fn into_text_ref_some() {
         let doc = parse_html().one(r#"<div>text content</div>"#);
@@ -513,6 +599,9 @@ mod tests {
         assert_eq!(&*text_ref.unwrap().borrow(), "text content");
     }
 
+    /// Tests into_text_ref with non-text node.
+    ///
+    /// Verifies that into_text_ref returns None when called on a non-text node.
     #[test]
     fn into_text_ref_none() {
         let doc = parse_html().one(r#"<div></div>"#);
@@ -522,6 +611,10 @@ mod tests {
         assert!(text_ref.is_none());
     }
 
+    /// Tests into_comment_ref with comment node.
+    ///
+    /// Verifies that into_comment_ref returns Some with the comment contents
+    /// when called on a comment node.
     #[test]
     fn into_comment_ref_some() {
         let doc = parse_html().one(r#"<!-- comment --><div></div>"#);
@@ -532,6 +625,9 @@ mod tests {
         assert_eq!(&*comment_ref.unwrap().borrow(), " comment ");
     }
 
+    /// Tests into_comment_ref with non-comment node.
+    ///
+    /// Verifies that into_comment_ref returns None when called on a non-comment node.
     #[test]
     fn into_comment_ref_none() {
         let doc = parse_html().one(r#"<div></div>"#);
@@ -541,6 +637,10 @@ mod tests {
         assert!(comment_ref.is_none());
     }
 
+    /// Tests into_doctype_ref with doctype node.
+    ///
+    /// Verifies that into_doctype_ref returns Some with the doctype data when
+    /// called on a doctype node.
     #[test]
     fn into_doctype_ref_some() {
         let doc = parse_html().one(r#"<!DOCTYPE html><html></html>"#);
@@ -551,6 +651,9 @@ mod tests {
         assert_eq!(&*doctype_ref.unwrap().name, "html");
     }
 
+    /// Tests into_doctype_ref with non-doctype node.
+    ///
+    /// Verifies that into_doctype_ref returns None when called on a non-doctype node.
     #[test]
     fn into_doctype_ref_none() {
         let doc = parse_html().one(r#"<div></div>"#);
@@ -560,6 +663,9 @@ mod tests {
         assert!(doctype_ref.is_none());
     }
 
+    /// Tests into_document_ref with document node.
+    ///
+    /// Verifies that into_document_ref returns Some when called on a document node.
     #[test]
     fn into_document_ref_some() {
         let doc = parse_html().one(r#"<html></html>"#);
@@ -568,6 +674,9 @@ mod tests {
         assert!(document_ref.is_some());
     }
 
+    /// Tests into_document_ref with non-document node.
+    ///
+    /// Verifies that into_document_ref returns None when called on a non-document node.
     #[test]
     fn into_document_ref_none() {
         let doc = parse_html().one(r#"<div></div>"#);
@@ -577,6 +686,10 @@ mod tests {
         assert!(document_ref.is_none());
     }
 
+    /// Tests into_processing_instruction_ref with non-PI node.
+    ///
+    /// Verifies that into_processing_instruction_ref returns None when called
+    /// on a non-processing-instruction node.
     #[test]
     fn into_processing_instruction_ref_none() {
         let doc = parse_html().one(r#"<div></div>"#);
@@ -586,6 +699,10 @@ mod tests {
         assert!(pi_ref.is_none());
     }
 
+    /// Tests into_document_fragment_ref with non-fragment node.
+    ///
+    /// Verifies that into_document_fragment_ref returns None when called on
+    /// a non-document-fragment node.
     #[test]
     fn into_document_fragment_ref_none() {
         let doc = parse_html().one(r#"<div></div>"#);
@@ -595,6 +712,9 @@ mod tests {
         assert!(frag_ref.is_none());
     }
 
+    /// Tests text_contents method.
+    ///
+    /// Verifies that text_contents collects all text from nested elements.
     #[test]
     fn text_contents() {
         let doc = parse_html().one(r#"<div>Hello <b>World</b>!</div>"#);
@@ -603,6 +723,9 @@ mod tests {
         assert_eq!(div.text_contents(), "Hello World!");
     }
 
+    /// Tests text_contents with deeply nested elements.
+    ///
+    /// Verifies that text_contents traverses all nesting levels to collect text.
     #[test]
     fn text_contents_nested() {
         let doc = parse_html().one(r#"<div><p>A</p><span>B<i>C</i></span>D</div>"#);
@@ -611,6 +734,10 @@ mod tests {
         assert_eq!(div.text_contents(), "ABCD");
     }
 
+    /// Tests text_contents with empty element.
+    ///
+    /// Verifies that text_contents returns an empty string for elements
+    /// with no text content.
     #[test]
     fn text_contents_empty() {
         let doc = parse_html().one(r#"<div></div>"#);
@@ -619,6 +746,9 @@ mod tests {
         assert_eq!(div.text_contents(), "");
     }
 
+    /// Tests as_node method.
+    ///
+    /// Verifies that as_node returns a reference to the underlying NodeRef.
     #[test]
     fn as_node() {
         let doc = parse_html().one(r#"<div></div>"#);

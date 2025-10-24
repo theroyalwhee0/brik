@@ -29,6 +29,10 @@ use super::{Doctype, DocumentData, ElementData, Node, NodeData};
 #[derive(Clone, Debug)]
 pub struct NodeRef(pub(super) Rc<Node>);
 
+/// Implements Deref to allow transparent access to the underlying Node.
+///
+/// This allows NodeRef to be used like a reference to Node, automatically
+/// dereferencing to access Node's methods and fields.
 impl Deref for NodeRef {
     type Target = Node;
     #[inline]
@@ -37,7 +41,16 @@ impl Deref for NodeRef {
     }
 }
 
+/// Implements Eq for NodeRef.
+///
+/// Two NodeRefs are equal if they point to the same Node instance
+/// (pointer equality), not if their data is equivalent.
 impl Eq for NodeRef {}
+
+/// Implements PartialEq for NodeRef using pointer equality.
+///
+/// Compares the memory addresses of the underlying Node instances.
+/// Returns true only if both NodeRefs point to the exact same Node.
 impl PartialEq for NodeRef {
     #[inline]
     fn eq(&self, other: &NodeRef) -> bool {
@@ -47,6 +60,10 @@ impl PartialEq for NodeRef {
     }
 }
 
+/// Factory methods and tree manipulation for NodeRef.
+///
+/// Provides constructors for all node types (elements, text, comments, etc.)
+/// and methods for reading and modifying the tree structure.
 impl NodeRef {
     /// Create a new node.
     #[inline]
@@ -239,6 +256,10 @@ mod tests {
     use crate::html5ever::tendril::TendrilSink;
     use crate::parse_html;
 
+    /// Tests that `new_element()` creates an element node with the correct tag name.
+    ///
+    /// Verifies both that the node is recognized as an element and that
+    /// the local name matches the specified tag.
     #[test]
     fn new_element() {
         let element =
@@ -248,6 +269,10 @@ mod tests {
         assert_eq!(element.as_element().unwrap().name.local.as_ref(), "div");
     }
 
+    /// Tests that `new_text()` creates a text node with the specified content.
+    ///
+    /// Verifies both that the node is recognized as a text node and that
+    /// the text content is stored correctly.
     #[test]
     fn new_text() {
         let text = NodeRef::new_text("Hello World");
@@ -256,6 +281,10 @@ mod tests {
         assert_eq!(&*text.as_text().unwrap().borrow(), "Hello World");
     }
 
+    /// Tests that `new_comment()` creates a comment node with the specified content.
+    ///
+    /// Verifies both that the node is recognized as a comment and that
+    /// the comment text is stored correctly.
     #[test]
     fn new_comment() {
         let comment = NodeRef::new_comment("This is a comment");
@@ -267,6 +296,10 @@ mod tests {
         );
     }
 
+    /// Tests that `new_processing_instruction()` creates a PI node with target and data.
+    ///
+    /// Verifies that both the target and data portions of the processing instruction
+    /// are stored and accessible.
     #[test]
     fn new_processing_instruction() {
         let pi = NodeRef::new_processing_instruction("xml-stylesheet", "href='style.css'");
@@ -277,6 +310,10 @@ mod tests {
         assert_eq!(pi_data.1, "href='style.css'");
     }
 
+    /// Tests that `new_doctype()` creates a doctype node with the specified name.
+    ///
+    /// Verifies both that the node is recognized as a doctype and that
+    /// the name field is accessible.
     #[test]
     fn new_doctype() {
         let doctype = NodeRef::new_doctype("html", "", "");
@@ -285,6 +322,9 @@ mod tests {
         assert_eq!(&*doctype.as_doctype().unwrap().name, "html");
     }
 
+    /// Tests that `new_document()` creates a document node.
+    ///
+    /// Verifies that the node is recognized as a document type.
     #[test]
     fn new_document() {
         let doc = NodeRef::new_document();
@@ -292,6 +332,10 @@ mod tests {
         assert!(doc.as_document().is_some());
     }
 
+    /// Tests that `text_contents()` concatenates all text from descendant nodes.
+    ///
+    /// Parses HTML with text in multiple elements and verifies that
+    /// all text is extracted and concatenated correctly.
     #[test]
     fn text_contents() {
         let doc = parse_html().one(r#"<div>Hello <b>World</b>!</div>"#);
@@ -300,6 +344,10 @@ mod tests {
         assert_eq!(div.as_node().text_contents(), "Hello World!");
     }
 
+    /// Tests that `append()` adds children in the correct order.
+    ///
+    /// Appends two text nodes and verifies that first_child, last_child,
+    /// and next_sibling relationships are established correctly.
     #[test]
     fn append() {
         let parent =
@@ -315,6 +363,10 @@ mod tests {
         assert_eq!(child1.next_sibling().unwrap(), child2);
     }
 
+    /// Tests that `prepend()` adds children at the beginning.
+    ///
+    /// Appends one child, then prepends another, and verifies that
+    /// the prepended child becomes the first child.
     #[test]
     fn prepend() {
         let parent =
@@ -330,6 +382,10 @@ mod tests {
         assert_eq!(child2.next_sibling().unwrap(), child1);
     }
 
+    /// Tests that `insert_after()` inserts a sibling in the middle of children.
+    ///
+    /// Creates three children with one inserted between two existing children,
+    /// and verifies the final order is correct.
     #[test]
     fn insert_after() {
         let parent =
@@ -349,6 +405,10 @@ mod tests {
         assert_eq!(children[2], child3);
     }
 
+    /// Tests that `insert_before()` inserts a sibling in the middle of children.
+    ///
+    /// Creates three children with one inserted between two existing children,
+    /// and verifies the final order is correct.
     #[test]
     fn insert_before() {
         let parent =
@@ -368,6 +428,11 @@ mod tests {
         assert_eq!(children[2], child3);
     }
 
+    /// Tests that `detach()` removes a child from its parent.
+    ///
+    /// Creates three children, detaches the middle one, and verifies that
+    /// the parent's children list no longer includes it and that the child
+    /// has no parent.
     #[test]
     fn detach() {
         let parent =
@@ -389,6 +454,10 @@ mod tests {
         assert!(child2.parent().is_none());
     }
 
+    /// Tests that `prepend()` works correctly on an empty parent.
+    ///
+    /// Edge case: when prepending to a parent with no children,
+    /// the child should become both first_child and last_child.
     #[test]
     fn prepend_to_empty() {
         let parent =
@@ -401,6 +470,10 @@ mod tests {
         assert_eq!(parent.last_child().unwrap(), child);
     }
 
+    /// Tests that `insert_after()` correctly updates parent's last_child.
+    ///
+    /// Edge case: when inserting after the current last child,
+    /// the parent's last_child pointer must be updated.
     #[test]
     fn insert_after_as_last_child() {
         let parent =
@@ -415,6 +488,10 @@ mod tests {
         assert!(child2.next_sibling().is_none());
     }
 
+    /// Tests that `insert_before()` correctly updates parent's first_child.
+    ///
+    /// Edge case: when inserting before the current first child,
+    /// the parent's first_child pointer must be updated.
     #[test]
     fn insert_before_as_first_child() {
         let parent =

@@ -76,6 +76,11 @@ pub trait CellOption {
     fn is_none(&self) -> bool;
 }
 
+/// Implements CellOption for Cell<Option<T>>.
+///
+/// Provides efficient checking of Option contents without moving the value
+/// out of the cell. Uses unsafe pointer access by default for performance,
+/// with a safe fallback when the "safe" feature is enabled.
 impl<T> CellOption for Cell<Option<T>> {
     #[inline]
     fn is_none(&self) -> bool {
@@ -102,6 +107,11 @@ pub trait CellOptionWeak<T> {
     fn clone_inner(&self) -> Option<Weak<T>>;
 }
 
+/// Implements CellOptionWeak for Cell<Option<Weak<T>>>.
+///
+/// Provides operations on weak references contained in a cell without
+/// moving them. Uses unsafe pointer access by default, with a safe
+/// fallback when the "safe" feature is enabled.
 impl<T> CellOptionWeak<T> for Cell<Option<Weak<T>>> {
     #[inline]
     fn upgrade(&self) -> Option<Rc<T>> {
@@ -145,6 +155,12 @@ pub trait CellOptionRc<T> {
     fn clone_inner(&self) -> Option<Rc<T>>;
 }
 
+/// Implements CellOptionRc for Cell<Option<Rc<T>>>.
+///
+/// Provides operations on strong references contained in a cell without
+/// moving them. Includes specialized logic for handling unique strong
+/// references. Uses unsafe pointer access by default, with a safe
+/// fallback when the "safe" feature is enabled.
 impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
     #[inline]
     fn take_if_unique_strong(&self) -> Option<Rc<T>> {
@@ -199,18 +215,30 @@ mod tests {
     use std::cell::Cell;
     use std::rc::{Rc, Weak};
 
+    /// Tests is_none() when the cell contains None.
+    ///
+    /// Verifies that CellOption::is_none() returns true when the cell
+    /// contains an empty Option.
     #[test]
     fn cell_option_is_none_with_none() {
         let cell: Cell<Option<i32>> = Cell::new(None);
         assert!(cell.is_none());
     }
 
+    /// Tests is_none() when the cell contains Some.
+    ///
+    /// Verifies that CellOption::is_none() returns false when the cell
+    /// contains a value.
     #[test]
     fn cell_option_is_none_with_some() {
         let cell = Cell::new(Some(42));
         assert!(!cell.is_none());
     }
 
+    /// Tests upgrading a weak reference to a strong reference.
+    ///
+    /// Verifies that CellOptionWeak::upgrade() can successfully upgrade
+    /// a weak reference when the strong reference is still alive.
     #[test]
     fn cell_option_weak_upgrade_some() {
         let rc = Rc::new(42);
@@ -222,12 +250,20 @@ mod tests {
         assert_eq!(*upgraded.unwrap(), 42);
     }
 
+    /// Tests upgrading when the cell contains None.
+    ///
+    /// Verifies that CellOptionWeak::upgrade() returns None when the
+    /// cell contains no weak reference.
     #[test]
     fn cell_option_weak_upgrade_none() {
         let cell: Cell<Option<Weak<i32>>> = Cell::new(None);
         assert!(cell.upgrade().is_none());
     }
 
+    /// Tests cloning a weak reference from within a cell.
+    ///
+    /// Verifies that CellOptionWeak::clone_inner() produces a new weak
+    /// reference that can be independently upgraded to access the value.
     #[test]
     fn cell_option_weak_clone_inner() {
         let rc = Rc::new(42);
@@ -239,6 +275,10 @@ mod tests {
         assert_eq!(*cloned.unwrap().upgrade().unwrap(), 42);
     }
 
+    /// Tests taking a unique strong reference from a cell.
+    ///
+    /// Verifies that CellOptionRc::take_if_unique_strong() successfully
+    /// takes the Rc when it is the only strong reference.
     #[test]
     fn cell_option_rc_take_if_unique_strong() {
         let rc = Rc::new(42);
@@ -250,6 +290,11 @@ mod tests {
         assert!(cell.take().is_none());
     }
 
+    /// Tests take_if_unique_strong when multiple references exist.
+    ///
+    /// Verifies that CellOptionRc::take_if_unique_strong() returns None
+    /// when there are multiple strong references to the value, leaving
+    /// the cell contents unchanged.
     #[test]
     fn cell_option_rc_take_if_unique_strong_multiple_refs() {
         let rc = Rc::new(42);
@@ -262,6 +307,10 @@ mod tests {
         drop(rc2);
     }
 
+    /// Tests cloning a strong reference from within a cell.
+    ///
+    /// Verifies that CellOptionRc::clone_inner() produces a new Rc
+    /// pointing to the same value.
     #[test]
     fn cell_option_rc_clone_inner() {
         let rc = Rc::new(42);

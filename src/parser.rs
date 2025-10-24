@@ -71,6 +71,11 @@ pub struct Sink {
     on_parse_error: ParseErrorHandler,
 }
 
+/// Implements TreeSink for Sink.
+///
+/// Provides the html5ever TreeSink interface for building a DOM tree during
+/// HTML parsing. Handles node creation, tree manipulation, and parse error
+/// callbacks as the parser processes HTML content.
 impl TreeSink for Sink {
     type Output = NodeRef;
 
@@ -263,6 +268,10 @@ mod tests {
     use html5ever::QualName;
     use std::path::Path;
 
+    /// Tests parsing HTML and serializing back to a string.
+    ///
+    /// Verifies that the parser correctly constructs a DOM tree from HTML input,
+    /// detects quirks mode, and can serialize the result back to normalized HTML.
     #[test]
     fn parse_and_serialize() {
         let html = r"
@@ -281,6 +290,10 @@ mod tests {
         );
     }
 
+    /// Tests parsing HTML with template elements.
+    ///
+    /// Verifies that the parser correctly handles HTML template elements,
+    /// which have special parsing rules and maintain separate content trees.
     #[test]
     fn parse_and_serialize_with_template() {
         let html = r"
@@ -299,6 +312,10 @@ mod tests {
         );
     }
 
+    /// Tests parsing an HTML fragment with a specific context.
+    ///
+    /// Verifies that fragment parsing respects the context element, which
+    /// affects how the HTML5 parser interprets the fragment content.
     #[test]
     fn parse_and_serialize_fragment() {
         let html = r"<tbody><tr><td>Test case";
@@ -315,6 +332,10 @@ mod tests {
         );
     }
 
+    /// Tests parsing HTML from a file.
+    ///
+    /// Verifies that the parser can read and parse HTML content from
+    /// a file path, producing the expected DOM structure.
     #[test]
     fn parse_file() {
         let mut path = Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf();

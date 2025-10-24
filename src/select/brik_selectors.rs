@@ -6,6 +6,12 @@ use selectors::parser::SelectorImpl;
 #[derive(Debug, Clone)]
 pub struct BrikSelectors;
 
+/// Implements SelectorImpl for BrikSelectors.
+///
+/// Provides the type mappings required by the selectors crate for CSS
+/// selector parsing and matching. Associates Brik's selector types
+/// (LocalNameSelector, AttrValue, PseudoClass, PseudoElement) with
+/// the generic selector implementation.
 impl SelectorImpl for BrikSelectors {
     type AttrValue = AttrValue;
     type Identifier = LocalNameSelector;

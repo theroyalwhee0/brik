@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Namespace manipulation and batch removal operations
   - CSS selectors with namespace support (e.g., `svg|rect`, `*|div`)
   - Example demonstrating HTML and SVG namespace handling
-- `safe` feature flag to eliminate all unsafe code blocks (#17)
+- Feature flag `safe` to eliminate all unsafe code blocks (#17)
   - Default mode uses unsafe code for performance
 - CI/CD workflow with GitHub Actions (#14, #16, #18, #25)
   - Automated testing for both default and safe modes

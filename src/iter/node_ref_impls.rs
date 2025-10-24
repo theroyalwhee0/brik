@@ -195,6 +195,10 @@ mod tests {
     use crate::html5ever::tendril::TendrilSink;
     use crate::parse_html;
 
+    /// Tests inclusive_preceding_siblings method.
+    ///
+    /// Verifies that the iterator includes the target node and all siblings
+    /// before it in the parent's child list, in reverse order.
     #[test]
     fn inclusive_preceding_siblings() {
         let html = "<div><p>1</p><p>2</p><p id='target'>3</p><p>4</p></div>";
@@ -216,6 +220,10 @@ mod tests {
         );
     }
 
+    /// Tests inclusive_preceding_siblings with first child.
+    ///
+    /// Verifies that when the target is the first child, the iterator
+    /// contains only the target itself.
     #[test]
     fn inclusive_preceding_siblings_first_child() {
         let html = "<div><p id='target'>1</p><p>2</p></div>";
@@ -236,6 +244,10 @@ mod tests {
         );
     }
 
+    /// Tests inclusive_preceding_siblings with no parent.
+    ///
+    /// Verifies that when the node has no parent (root node), the iterator
+    /// contains only the node itself.
     #[test]
     fn inclusive_preceding_siblings_no_parent() {
         let doc = parse_html().one("<html></html>");
@@ -243,6 +255,10 @@ mod tests {
         assert_eq!(siblings.len(), 1);
     }
 
+    /// Tests preceding_siblings method.
+    ///
+    /// Verifies that the iterator excludes the target node and returns only
+    /// siblings before it in the parent's child list, in reverse order.
     #[test]
     fn preceding_siblings() {
         let html = "<div><p>1</p><p>2</p><p id='target'>3</p><p>4</p></div>";
@@ -255,6 +271,10 @@ mod tests {
         assert_eq!(siblings.len(), 2);
     }
 
+    /// Tests preceding_siblings with first child.
+    ///
+    /// Verifies that when the target is the first child, the iterator is
+    /// empty since there are no siblings before it.
     #[test]
     fn preceding_siblings_first_child() {
         let html = "<div><p id='target'>1</p><p>2</p></div>";
@@ -265,6 +285,10 @@ mod tests {
         assert_eq!(siblings.len(), 0);
     }
 
+    /// Tests preceding_siblings with no parent.
+    ///
+    /// Verifies that when the node has no parent (root node), the iterator
+    /// is empty since there are no siblings.
     #[test]
     fn preceding_siblings_no_parent() {
         let doc = parse_html().one("<html></html>");
@@ -272,6 +296,10 @@ mod tests {
         assert_eq!(siblings.len(), 0);
     }
 
+    /// Tests inclusive_following_siblings method.
+    ///
+    /// Verifies that the iterator includes the target node and all siblings
+    /// after it in the parent's child list.
     #[test]
     fn inclusive_following_siblings() {
         let html = "<div><p>1</p><p id='target'>2</p><p>3</p><p>4</p></div>";
@@ -292,6 +320,10 @@ mod tests {
         );
     }
 
+    /// Tests inclusive_following_siblings with last child.
+    ///
+    /// Verifies that when the target is the last child, the iterator
+    /// contains only the target itself.
     #[test]
     fn inclusive_following_siblings_last_child() {
         let html = "<div><p>1</p><p id='target'>2</p></div>";
@@ -311,6 +343,10 @@ mod tests {
         );
     }
 
+    /// Tests inclusive_following_siblings with no parent.
+    ///
+    /// Verifies that when the node has no parent (root node), the iterator
+    /// contains only the node itself.
     #[test]
     fn inclusive_following_siblings_no_parent() {
         let doc = parse_html().one("<html></html>");
@@ -318,6 +354,10 @@ mod tests {
         assert_eq!(siblings.len(), 1);
     }
 
+    /// Tests following_siblings method.
+    ///
+    /// Verifies that the iterator excludes the target node and returns only
+    /// siblings after it in the parent's child list.
     #[test]
     fn following_siblings() {
         let html = "<div><p>1</p><p id='target'>2</p><p>3</p><p>4</p></div>";
@@ -330,6 +370,10 @@ mod tests {
         assert_eq!(siblings.len(), 2);
     }
 
+    /// Tests following_siblings with last child.
+    ///
+    /// Verifies that when the target is the last child, the iterator is
+    /// empty since there are no siblings after it.
     #[test]
     fn following_siblings_last_child() {
         let html = "<div><p>1</p><p id='target'>2</p></div>";
@@ -340,6 +384,10 @@ mod tests {
         assert_eq!(siblings.len(), 0);
     }
 
+    /// Tests following_siblings with no parent.
+    ///
+    /// Verifies that when the node has no parent (root node), the iterator
+    /// is empty since there are no siblings.
     #[test]
     fn following_siblings_no_parent() {
         let doc = parse_html().one("<html></html>");
@@ -347,6 +395,10 @@ mod tests {
         assert_eq!(siblings.len(), 0);
     }
 
+    /// Tests children method.
+    ///
+    /// Verifies that the iterator returns all direct children of a node
+    /// in order.
     #[test]
     fn children() {
         let html = "<div><p>1</p><p>2</p><p>3</p></div>";
@@ -360,6 +412,9 @@ mod tests {
         assert!(children.iter().any(|n| n.as_element().is_some()));
     }
 
+    /// Tests children method with no children.
+    ///
+    /// Verifies that the iterator is empty when a node has no children.
     #[test]
     fn children_empty() {
         let html = "<div></div>";
@@ -370,6 +425,10 @@ mod tests {
         assert_eq!(children.len(), 0);
     }
 
+    /// Tests traverse_inclusive method.
+    ///
+    /// Verifies that the iterator produces start and end edges for the node
+    /// itself and all its descendants in depth-first order.
     #[test]
     fn traverse_inclusive() {
         let html = "<div><p>text</p></div>";
@@ -382,6 +441,10 @@ mod tests {
         assert_eq!(edges.len(), 6);
     }
 
+    /// Tests traverse method.
+    ///
+    /// Verifies that the iterator produces start and end edges for
+    /// descendants only, excluding the node itself.
     #[test]
     fn traverse() {
         let html = "<div><p>text</p></div>";
@@ -394,6 +457,9 @@ mod tests {
         assert_eq!(edges.len(), 4);
     }
 
+    /// Tests traverse method with no children.
+    ///
+    /// Verifies that the iterator is empty when a node has no descendants.
     #[test]
     fn traverse_empty() {
         let html = "<div></div>";
@@ -404,6 +470,10 @@ mod tests {
         assert_eq!(edges.len(), 0);
     }
 
+    /// Tests select_first when element is found.
+    ///
+    /// Verifies that select_first returns the first matching element for
+    /// a valid selector.
     #[test]
     fn select_first_found() {
         let html = "<div><p>1</p><p class='test'>2</p><p class='test'>3</p></div>";
@@ -415,6 +485,10 @@ mod tests {
         assert_eq!(element.name.local.as_ref(), "p");
     }
 
+    /// Tests select_first when no element matches.
+    ///
+    /// Verifies that select_first returns an error when no elements match
+    /// the selector.
     #[test]
     fn select_first_not_found() {
         let html = "<div><p>1</p></div>";
@@ -424,6 +498,10 @@ mod tests {
         assert!(result.is_err());
     }
 
+    /// Tests select_first with invalid selector.
+    ///
+    /// Verifies that select_first returns an error when the selector string
+    /// fails to parse.
     #[test]
     fn select_first_invalid_selector() {
         let doc = parse_html().one("<div></div>");
@@ -431,6 +509,10 @@ mod tests {
         assert!(result.is_err());
     }
 
+    /// Tests inclusive_ancestors method.
+    ///
+    /// Verifies that the iterator includes the node itself and all parent
+    /// nodes up to the document root.
     #[test]
     fn inclusive_ancestors() {
         let html = "<html><body><div><p id='target'>text</p></div></body></html>";
@@ -444,6 +526,10 @@ mod tests {
         assert_eq!(ancestors[0].as_element().unwrap().name.local.as_ref(), "p");
     }
 
+    /// Tests inclusive_descendants method.
+    ///
+    /// Verifies that the iterator includes the node itself and all
+    /// descendant nodes in depth-first order.
     #[test]
     fn inclusive_descendants() {
         let html = "<div><p>text</p><span>more</span></div>";
@@ -460,6 +546,10 @@ mod tests {
         );
     }
 
+    /// Tests descendants method.
+    ///
+    /// Verifies that the iterator excludes the node itself and returns only
+    /// descendant nodes in depth-first order.
     #[test]
     fn descendants() {
         let html = "<div><p>text</p><span>more</span></div>";

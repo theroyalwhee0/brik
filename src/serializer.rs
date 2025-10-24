@@ -9,6 +9,11 @@ use std::path::Path;
 
 use crate::tree::{NodeData, NodeRef};
 
+/// Implements Serialize for NodeRef.
+///
+/// Enables HTML serialization of DOM nodes using html5ever's serialization
+/// infrastructure. Handles all node types including elements, text, comments,
+/// doctypes, processing instructions, documents, and document fragments.
 impl Serialize for NodeRef {
     fn serialize<S: Serializer>(
         &self,
@@ -77,6 +82,10 @@ impl Serialize for NodeRef {
     }
 }
 
+/// Implements Display for NodeRef.
+///
+/// Formats the node and its descendants as an HTML string. Uses the
+/// Serialize implementation to generate the HTML output.
 impl fmt::Display for NodeRef {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -88,6 +97,10 @@ impl fmt::Display for NodeRef {
     }
 }
 
+/// Methods for HTML serialization.
+///
+/// Provides convenient methods for serializing DOM nodes to HTML strings,
+/// byte streams, and files.
 impl NodeRef {
     /// Serialize this node and its descendants in HTML syntax to the given stream.
     ///
@@ -124,6 +137,11 @@ mod tests {
     use crate::traits::*;
     use tempfile::TempDir;
 
+    /// Tests serializing to a file and reading it back.
+    ///
+    /// Verifies that serialize_to_file() correctly writes HTML to disk
+    /// and that the resulting file can be parsed to produce an equivalent
+    /// DOM structure.
     #[test]
     fn serialize_and_read_file() {
         let tempdir = TempDir::new().unwrap();
@@ -139,6 +157,10 @@ mod tests {
         assert_eq!(document.to_string(), document2.to_string());
     }
 
+    /// Tests Display trait for NodeRef.
+    ///
+    /// Verifies that to_string() produces correct HTML output for a
+    /// subtree, properly serializing element tags and attributes.
     #[test]
     fn to_string() {
         let html = r"<!DOCTYPE html>
