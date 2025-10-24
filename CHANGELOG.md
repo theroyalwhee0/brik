@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2025-10-24
+
+### Fixed
+
+- Remove future-looking documentation from SelectorContext (#43)
+- Remove uncertain "(if exists)" qualifier from documentation (#43)
+
+### Changed
+
+- Add namespace support to Features list in README (#43)
+- Update version references in README to match current release
+
 ## [0.9.0] - 2025-10-24
 
 ### Added
@@ -55,6 +67,7 @@ See [docs/historical-changelog.md](docs/historical-changelog.md) for details.
 **Historical Note**: This project was originally created by Simon Sapin as `kuchiki`,
 maintained by Brave Browser as `kuchikiki`, and is now maintained as `brik`.
 
-[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.9.0...HEAD
+[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/theroyalwhee0/brik/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/theroyalwhee0/brik/compare/v0.8.2...v0.9.0
-[0.8.2]: https://github.com/theroyalwhee0/brik/releases/tag/v0.8.2
+[0.8.2]: https://github.com/brave/kuchikiki/releases/tag/v0.8.2
