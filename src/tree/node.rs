@@ -1,10 +1,8 @@
+use super::{Doctype, DocumentData, ElementData, NodeData, NodeRef};
+use crate::cell_extras::*;
 use std::cell::{Cell, RefCell};
 use std::fmt;
 use std::rc::{Rc, Weak};
-
-use crate::cell_extras::*;
-
-use super::{Doctype, DocumentData, ElementData, NodeData, NodeRef};
 
 /// A node inside a DOM-like tree.
 pub struct Node {
@@ -22,6 +20,11 @@ pub struct Node {
     pub(super) data: NodeData,
 }
 
+/// Implements Debug formatting for Node.
+///
+/// Outputs the node's data type and memory address in the format:
+/// `{node_data} @ {address}`. The memory address allows distinguishing
+/// between different nodes with identical data.
 impl fmt::Debug for Node {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
@@ -91,6 +94,10 @@ impl Drop for Node {
     }
 }
 
+/// Core methods for Node.
+///
+/// Provides accessors for node data, type-specific downcasting,
+/// tree navigation, and tree manipulation operations.
 impl Node {
     /// Return a reference to this node's node-type-specific data.
     #[inline]
@@ -230,6 +237,10 @@ mod tests {
     use crate::html5ever::tendril::TendrilSink;
     use crate::parse_html;
 
+    /// Tests that `as_text()` correctly extracts text content from a text node.
+    ///
+    /// Creates a div element containing text, retrieves the text node child,
+    /// and verifies both that `Some` is returned and that the text content matches.
     #[test]
     fn as_text() {
         let html = "<div>text content</div>";
@@ -241,6 +252,10 @@ mod tests {
         assert_eq!(&*text_node.as_text().unwrap().borrow(), "text content");
     }
 
+    /// Tests that `as_comment()` correctly extracts comment content.
+    ///
+    /// Parses HTML containing a comment, retrieves the comment node,
+    /// and verifies the comment text is extracted correctly with preserved whitespace.
     #[test]
     fn as_comment() {
         let html = "<!-- comment text --><div></div>";
@@ -254,6 +269,10 @@ mod tests {
         );
     }
 
+    /// Tests that `as_doctype()` correctly extracts DOCTYPE information.
+    ///
+    /// Parses HTML with a DOCTYPE declaration, retrieves the doctype node,
+    /// and verifies the name field is accessible.
     #[test]
     fn as_doctype() {
         let html = "<!DOCTYPE html><html></html>";
@@ -265,6 +284,10 @@ mod tests {
         assert_eq!(&*doctype.unwrap().name, "html");
     }
 
+    /// Tests that `as_document()` returns document data for document nodes.
+    ///
+    /// Verifies that the root document node returned by the parser
+    /// correctly identifies itself as a document type.
     #[test]
     fn as_document() {
         let html = "<html></html>";
@@ -273,6 +296,10 @@ mod tests {
         assert!(doc.as_document().is_some());
     }
 
+    /// Tests that `as_processing_instruction()` returns None for non-PI nodes.
+    ///
+    /// The HTML5 parser doesn't create processing instruction nodes,
+    /// so this test verifies that regular elements correctly return None.
     #[test]
     fn as_processing_instruction() {
         let html = r#"<?xml-stylesheet href="style.css"?><div></div>"#;
@@ -283,6 +310,10 @@ mod tests {
         assert!(div.as_node().as_processing_instruction().is_none());
     }
 
+    /// Tests that `as_document_fragment()` returns None for document nodes.
+    ///
+    /// Document nodes and document fragment nodes are distinct types.
+    /// This verifies that document nodes don't incorrectly identify as fragments.
     #[test]
     fn as_document_fragment() {
         let html = "<div></div>";
@@ -292,6 +323,10 @@ mod tests {
         assert!(doc.as_document_fragment().is_none());
     }
 
+    /// Tests that `previous_sibling()` correctly navigates to the preceding sibling.
+    ///
+    /// Creates a div with two children (p and span), retrieves the last child,
+    /// and verifies that its previous sibling is the p element.
     #[test]
     fn previous_sibling() {
         let html = "<div><p>1</p><span>2</span></div>";
@@ -307,6 +342,10 @@ mod tests {
         );
     }
 
+    /// Tests that `previous_sibling()` returns None for first children.
+    ///
+    /// Verifies that the first child of a parent correctly reports
+    /// no previous sibling.
     #[test]
     fn previous_sibling_none() {
         let html = "<div><p>first</p></div>";
@@ -317,6 +356,10 @@ mod tests {
         assert!(first_child.previous_sibling().is_none());
     }
 
+    /// Tests that Debug formatting includes the node's element type.
+    ///
+    /// Verifies that the Debug output contains meaningful information
+    /// about the node's data type (in this case "Element").
     #[test]
     fn debug_format() {
         let html = "<div></div>";
