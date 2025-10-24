@@ -326,6 +326,10 @@ mod tests {
     use crate::parser::parse_html;
     use crate::traits::*;
 
+    /// Tests that `get_ns()` retrieves attributes from the null namespace.
+    ///
+    /// Regular HTML attributes (class, id, etc.) are in the null namespace.
+    /// Verifies that get_ns can retrieve them correctly.
     #[test]
     #[cfg(feature = "namespaces")]
     fn get_ns_null_namespace() {
@@ -339,6 +343,10 @@ mod tests {
         assert_eq!(attrs.get_ns(ns!(), "missing"), None);
     }
 
+    /// Tests that SVG element attributes are still in the null namespace.
+    ///
+    /// Even within SVG elements, attributes like width and height
+    /// are in the null namespace, not the SVG namespace.
     #[test]
     #[cfg(feature = "namespaces")]
     fn get_ns_svg_namespace() {
@@ -359,6 +367,10 @@ mod tests {
         assert_eq!(attrs.get_ns(ns!(), "height"), Some("50"));
     }
 
+    /// Tests that `has_ns()` correctly checks attribute existence in a namespace.
+    ///
+    /// Verifies both positive cases (attribute exists) and negative cases
+    /// (attribute doesn't exist, or exists in wrong namespace).
     #[test]
     #[cfg(feature = "namespaces")]
     fn has_ns_checks_existence() {
@@ -371,6 +383,10 @@ mod tests {
         assert!(!attrs.has_ns(ns!(html), "class"));
     }
 
+    /// Tests that `insert_ns()` adds a new attribute in a custom namespace.
+    ///
+    /// Verifies that attributes can be created in arbitrary namespaces
+    /// and that the prefix is preserved.
     #[test]
     #[cfg(feature = "namespaces")]
     fn insert_ns_adds_attribute() {
@@ -391,6 +407,10 @@ mod tests {
         assert_eq!(attrs.get_ns(custom_ns, "custom"), Some("value"));
     }
 
+    /// Tests that `insert_ns()` replaces existing attributes and returns old value.
+    ///
+    /// When inserting an attribute that already exists, the old value
+    /// should be returned and the new value should replace it.
     #[test]
     #[cfg(feature = "namespaces")]
     fn insert_ns_replaces_existing() {
@@ -406,6 +426,10 @@ mod tests {
         assert_eq!(attrs.get_ns(ns!(), "test"), Some("second"));
     }
 
+    /// Tests that `remove_ns()` removes an attribute and returns its value.
+    ///
+    /// Verifies that the attribute is removed from the collection and
+    /// the old value is returned.
     #[test]
     #[cfg(feature = "namespaces")]
     fn remove_ns_removes_attribute() {
@@ -422,6 +446,10 @@ mod tests {
         assert_eq!(attrs.get_ns(ns!(), "class"), None);
     }
 
+    /// Tests that `remove_ns()` returns None for nonexistent attributes.
+    ///
+    /// Attempting to remove an attribute that doesn't exist should
+    /// return None without error.
     #[test]
     #[cfg(feature = "namespaces")]
     fn remove_ns_returns_none_when_missing() {
@@ -433,6 +461,10 @@ mod tests {
         assert_eq!(removed, None);
     }
 
+    /// Tests that `attrs_in_ns()` iterates all attributes in the null namespace.
+    ///
+    /// Parses HTML with multiple attributes and verifies that all
+    /// null-namespace attributes are yielded by the iterator.
     #[test]
     #[cfg(feature = "namespaces")]
     fn attrs_in_ns_iterates_null_namespace() {
@@ -452,6 +484,10 @@ mod tests {
         assert_eq!(null_ns_attrs[2].1, "main");
     }
 
+    /// Tests that `attrs_in_ns()` returns empty iterator when no attributes match.
+    ///
+    /// When querying a namespace that contains no attributes,
+    /// the iterator should yield no items.
     #[test]
     #[cfg(feature = "namespaces")]
     fn attrs_in_ns_empty_when_no_match() {
@@ -464,6 +500,10 @@ mod tests {
         assert_eq!(html_ns_attrs.len(), 0);
     }
 
+    /// Tests that `attrs_in_ns()` correctly filters attributes by namespace.
+    ///
+    /// Creates attributes in multiple namespaces and verifies that
+    /// the iterator only yields attributes from the requested namespace.
     #[test]
     #[cfg(feature = "namespaces")]
     fn attrs_in_ns_custom_namespace() {
@@ -486,6 +526,10 @@ mod tests {
         assert_eq!(custom_attrs[1].1, "value2");
     }
 
+    /// Tests that `remove_xmlns_for()` removes xmlns declarations for a URI.
+    ///
+    /// When multiple xmlns declarations exist with different URIs,
+    /// only the one matching the specified URI should be removed.
     #[test]
     #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_removes_matching_declarations() {
@@ -516,6 +560,10 @@ mod tests {
         assert!(attrs.has_ns(&xmlns_ns, "custom"));
     }
 
+    /// Tests that `remove_xmlns_for()` removes all declarations with the same URI.
+    ///
+    /// When multiple xmlns declarations exist with the same URI but different
+    /// prefixes, all should be removed.
     #[test]
     #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_removes_multiple_declarations() {
@@ -551,6 +599,10 @@ mod tests {
         assert!(attrs.has_ns(&xmlns_ns, "other"));
     }
 
+    /// Tests that `remove_xmlns_for()` does nothing when URI doesn't match.
+    ///
+    /// When the specified URI doesn't match any xmlns declarations,
+    /// all declarations should remain unchanged.
     #[test]
     #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_no_match() {
@@ -572,6 +624,10 @@ mod tests {
         assert!(attrs.has_ns(&xmlns_ns, "custom"));
     }
 
+    /// Tests that `remove_xmlns_for()` handles empty attribute collections.
+    ///
+    /// Edge case: calling remove_xmlns_for on an empty Attributes
+    /// should not panic.
     #[test]
     #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_empty_attributes() {
@@ -583,6 +639,10 @@ mod tests {
         attrs.remove_xmlns_for("http://example.com/any");
     }
 
+    /// Tests that `remove_xmlns_for()` only removes xmlns declarations.
+    ///
+    /// Regular attributes (not in the xmlns namespace) should not
+    /// be affected, even if their value matches the URI.
     #[test]
     #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_doesnt_remove_regular_attributes() {
@@ -607,6 +667,10 @@ mod tests {
         assert_eq!(attrs.get("class"), Some("test"));
     }
 
+    /// Tests that `get_mut()` allows in-place modification of attribute values.
+    ///
+    /// Retrieves a mutable reference to an attribute value and modifies it,
+    /// then verifies the modification persisted.
     #[test]
     fn get_mut_modifies_attribute() {
         let doc = parse_html().one(r#"<div class="old">Content</div>"#);
@@ -620,6 +684,10 @@ mod tests {
         assert_eq!(attrs.get("class"), Some("new"));
     }
 
+    /// Tests that `get_mut()` returns None for nonexistent attributes.
+    ///
+    /// Attempting to get a mutable reference to an attribute that
+    /// doesn't exist should return None.
     #[test]
     fn get_mut_returns_none_for_missing() {
         let doc = parse_html().one(r#"<div>Content</div>"#);
@@ -629,6 +697,10 @@ mod tests {
         assert!(attrs.get_mut("nonexistent").is_none());
     }
 
+    /// Tests that `entry().or_insert()` adds a new attribute.
+    ///
+    /// Uses the entry API to insert an attribute only if it doesn't exist.
+    /// Verifies that the attribute is added successfully.
     #[test]
     fn entry_insert_new_attribute() {
         let doc = parse_html().one(r#"<div>Content</div>"#);
@@ -643,6 +715,10 @@ mod tests {
         assert_eq!(attrs.get("class"), Some("test"));
     }
 
+    /// Tests that `entry().or_insert()` preserves existing attributes.
+    ///
+    /// Uses the entry API to attempt insertion when an attribute already exists.
+    /// Verifies that the existing value is kept.
     #[test]
     fn entry_existing_attribute() {
         let doc = parse_html().one(r#"<div class="existing">Content</div>"#);
