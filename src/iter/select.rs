@@ -46,3 +46,55 @@ where
             .find(|element| selectors.matches(element))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::html5ever::tendril::TendrilSink;
+    use crate::iter::NodeIterator;
+    use crate::parse_html;
+
+    #[test]
+    fn select_forward() {
+        let html = r#"<div><p class="test">1</p><span>2</span><p class="test">3</p></div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let mut select = div.as_node().descendants().select(".test").unwrap();
+
+        let first = select.next().unwrap();
+        assert_eq!(first.name.local.as_ref(), "p");
+
+        let second = select.next().unwrap();
+        assert_eq!(second.name.local.as_ref(), "p");
+
+        assert!(select.next().is_none());
+    }
+
+    #[test]
+    fn select_backward() {
+        let html = r#"<div><p class="test">1</p><span>2</span><p class="test">3</p></div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let mut select = div.as_node().descendants().select(".test").unwrap();
+
+        let last = select.next_back().unwrap();
+        assert_eq!(last.name.local.as_ref(), "p");
+
+        let first = select.next_back().unwrap();
+        assert_eq!(first.name.local.as_ref(), "p");
+
+        assert!(select.next_back().is_none());
+    }
+
+    #[test]
+    fn select_no_matches() {
+        let html = "<div><p>1</p><span>2</span></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let mut select = div.as_node().descendants().select(".nonexistent").unwrap();
+
+        assert!(select.next().is_none());
+    }
+}
