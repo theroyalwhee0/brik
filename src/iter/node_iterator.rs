@@ -68,3 +68,48 @@ pub trait NodeIterator: Sized + Iterator<Item = NodeRef> {
 }
 
 impl<I> NodeIterator for I where I: Iterator<Item = NodeRef> {}
+
+#[cfg(test)]
+mod tests {
+    use crate::html5ever::tendril::TendrilSink;
+    use crate::iter::NodeIterator;
+    use crate::parse_html;
+
+    #[test]
+    fn text_nodes() {
+        let html = "<div>text1<p>text2</p>text3</div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let text_nodes: Vec<_> = div.as_node().descendants().text_nodes().collect();
+
+        assert_eq!(text_nodes.len(), 3);
+    }
+
+    #[test]
+    fn comments() {
+        let html = "<div><!-- comment1 --><p>text</p><!-- comment2 --></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let comments: Vec<_> = div.as_node().descendants().comments().collect();
+
+        assert_eq!(comments.len(), 2);
+    }
+
+    #[test]
+    fn detach_all() {
+        let html = "<div><p>One</p><p>Two</p><p>Three</p></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let paragraphs: Vec<_> = div.as_node().descendants().select("p").unwrap().collect();
+
+        paragraphs
+            .into_iter()
+            .map(|p| p.as_node().clone())
+            .detach_all();
+
+        assert_eq!(div.as_node().children().elements().count(), 0);
+    }
+}

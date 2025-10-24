@@ -192,3 +192,83 @@ impl<T> CellOptionRc<T> for Cell<Option<Rc<T>>> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cell::Cell;
+    use std::rc::{Rc, Weak};
+
+    #[test]
+    fn cell_option_is_none_with_none() {
+        let cell: Cell<Option<i32>> = Cell::new(None);
+        assert!(cell.is_none());
+    }
+
+    #[test]
+    fn cell_option_is_none_with_some() {
+        let cell = Cell::new(Some(42));
+        assert!(!cell.is_none());
+    }
+
+    #[test]
+    fn cell_option_weak_upgrade_some() {
+        let rc = Rc::new(42);
+        let weak = Rc::downgrade(&rc);
+        let cell = Cell::new(Some(weak));
+
+        let upgraded = cell.upgrade();
+        assert!(upgraded.is_some());
+        assert_eq!(*upgraded.unwrap(), 42);
+    }
+
+    #[test]
+    fn cell_option_weak_upgrade_none() {
+        let cell: Cell<Option<Weak<i32>>> = Cell::new(None);
+        assert!(cell.upgrade().is_none());
+    }
+
+    #[test]
+    fn cell_option_weak_clone_inner() {
+        let rc = Rc::new(42);
+        let weak = Rc::downgrade(&rc);
+        let cell = Cell::new(Some(weak));
+
+        let cloned = cell.clone_inner();
+        assert!(cloned.is_some());
+        assert_eq!(*cloned.unwrap().upgrade().unwrap(), 42);
+    }
+
+    #[test]
+    fn cell_option_rc_take_if_unique_strong() {
+        let rc = Rc::new(42);
+        let cell = Cell::new(Some(rc));
+
+        let taken = cell.take_if_unique_strong();
+        assert!(taken.is_some());
+        assert_eq!(*taken.unwrap(), 42);
+        assert!(cell.take().is_none());
+    }
+
+    #[test]
+    fn cell_option_rc_take_if_unique_strong_multiple_refs() {
+        let rc = Rc::new(42);
+        let rc2 = rc.clone();
+        let cell = Cell::new(Some(rc));
+
+        let taken = cell.take_if_unique_strong();
+        assert!(taken.is_none());
+        assert!(cell.take().is_some());
+        drop(rc2);
+    }
+
+    #[test]
+    fn cell_option_rc_clone_inner() {
+        let rc = Rc::new(42);
+        let cell = Cell::new(Some(rc));
+
+        let cloned = cell.clone_inner();
+        assert!(cloned.is_some());
+        assert_eq!(*cloned.unwrap(), 42);
+    }
+}
