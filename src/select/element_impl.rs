@@ -12,6 +12,12 @@ use selectors::{matching, OpaqueElement};
 /// Copied from rust-selectors.
 pub(super) static SELECTOR_WHITESPACE: &[char] = &[' ', '\t', '\n', '\r', '\x0C'];
 
+/// Implements selectors::Element for NodeDataRef<ElementData>.
+///
+/// Provides the selectors crate interface for CSS selector matching on
+/// Brik's ElementData nodes. This implementation enables full CSS selector
+/// support including element relationships, attributes, pseudo-classes, and
+/// namespace matching.
 impl selectors::Element for NodeDataRef<ElementData> {
     type Impl = BrikSelectors;
 
@@ -208,6 +214,9 @@ mod tests {
     use crate::parse_html;
     use selectors::Element;
 
+    /// Tests parent_element method.
+    ///
+    /// Verifies that parent_element returns the parent element node.
     #[test]
     fn parent_element() {
         let html = "<div><p><span>text</span></p></div>";
@@ -219,6 +228,10 @@ mod tests {
         assert_eq!(parent.unwrap().name.local.as_ref(), "p");
     }
 
+    /// Tests parent_element with no parent element.
+    ///
+    /// Verifies that parent_element returns None when the parent is not
+    /// an element (e.g., when parent is a document node).
     #[test]
     fn parent_element_none() {
         let doc = parse_html().one("<html></html>");
@@ -228,6 +241,10 @@ mod tests {
         assert!(html.parent_element().is_none());
     }
 
+    /// Tests prev_sibling_element method.
+    ///
+    /// Verifies that prev_sibling_element returns the previous sibling
+    /// element node.
     #[test]
     fn prev_sibling_element() {
         let html = "<div><p>1</p><span>2</span></div>";
@@ -239,6 +256,10 @@ mod tests {
         assert_eq!(prev.unwrap().name.local.as_ref(), "p");
     }
 
+    /// Tests prev_sibling_element with no previous sibling.
+    ///
+    /// Verifies that prev_sibling_element returns None when there is no
+    /// previous element sibling.
     #[test]
     fn prev_sibling_element_none() {
         let html = "<div><p>first</p></div>";
@@ -248,6 +269,9 @@ mod tests {
         assert!(p.prev_sibling_element().is_none());
     }
 
+    /// Tests next_sibling_element method.
+    ///
+    /// Verifies that next_sibling_element returns the next sibling element node.
     #[test]
     fn next_sibling_element() {
         let html = "<div><p>1</p><span>2</span></div>";
@@ -259,6 +283,10 @@ mod tests {
         assert_eq!(next.unwrap().name.local.as_ref(), "span");
     }
 
+    /// Tests next_sibling_element with no next sibling.
+    ///
+    /// Verifies that next_sibling_element returns None when there is no
+    /// next element sibling.
     #[test]
     fn next_sibling_element_none() {
         let html = "<div><p>last</p></div>";
@@ -268,6 +296,9 @@ mod tests {
         assert!(p.next_sibling_element().is_none());
     }
 
+    /// Tests first_element_child method.
+    ///
+    /// Verifies that first_element_child returns the first child element.
     #[test]
     fn first_element_child() {
         let html = "<div><p>first</p><span>second</span></div>";
@@ -279,6 +310,10 @@ mod tests {
         assert_eq!(first_child.unwrap().name.local.as_ref(), "p");
     }
 
+    /// Tests first_element_child with no children.
+    ///
+    /// Verifies that first_element_child returns None when the element
+    /// has no child elements.
     #[test]
     fn first_element_child_none() {
         let html = "<div></div>";
@@ -288,6 +323,9 @@ mod tests {
         assert!(div.first_element_child().is_none());
     }
 
+    /// Tests is_empty with empty element.
+    ///
+    /// Verifies that is_empty returns true for elements with no children.
     #[test]
     fn is_empty_true() {
         let html = "<div></div>";
@@ -297,6 +335,10 @@ mod tests {
         assert!(div.is_empty());
     }
 
+    /// Tests is_empty with child element.
+    ///
+    /// Verifies that is_empty returns false when the element contains
+    /// child elements.
     #[test]
     fn is_empty_false_with_element() {
         let html = "<div><p>text</p></div>";
@@ -306,6 +348,10 @@ mod tests {
         assert!(!div.is_empty());
     }
 
+    /// Tests is_empty with text content.
+    ///
+    /// Verifies that is_empty returns false when the element contains
+    /// non-empty text nodes.
     #[test]
     fn is_empty_false_with_text() {
         let html = "<div>text</div>";
@@ -315,6 +361,10 @@ mod tests {
         assert!(!div.is_empty());
     }
 
+    /// Tests is_empty with empty text nodes.
+    ///
+    /// Verifies that is_empty returns true when text nodes are empty,
+    /// treating them as not contributing to content.
     #[test]
     fn is_empty_true_with_empty_text() {
         let html = "<div></div>";
@@ -324,6 +374,10 @@ mod tests {
         assert!(div.is_empty());
     }
 
+    /// Tests is_root with root element.
+    ///
+    /// Verifies that is_root returns true for the document's root element
+    /// (html element whose parent is the document node).
     #[test]
     fn is_root_true() {
         let doc = parse_html().one("<html></html>");
@@ -332,6 +386,10 @@ mod tests {
         assert!(html.is_root());
     }
 
+    /// Tests is_root with non-root element.
+    ///
+    /// Verifies that is_root returns false for elements that are not
+    /// the document root.
     #[test]
     fn is_root_false() {
         let html = "<html><body><div></div></body></html>";
@@ -341,6 +399,10 @@ mod tests {
         assert!(!div.is_root());
     }
 
+    /// Tests is_html_element_in_html_document method.
+    ///
+    /// Verifies that elements in the HTML namespace are correctly identified
+    /// as HTML elements.
     #[test]
     fn is_html_element_in_html_document() {
         let html = "<html><body><div></div></body></html>";
@@ -350,6 +412,10 @@ mod tests {
         assert!(div.is_html_element_in_html_document());
     }
 
+    /// Tests has_local_name with matching name.
+    ///
+    /// Verifies that has_local_name returns true when the element's
+    /// local name matches.
     #[test]
     fn has_local_name_true() {
         let html = "<div></div>";
@@ -359,6 +425,10 @@ mod tests {
         assert!(div.has_local_name(&html5ever::local_name!("div")));
     }
 
+    /// Tests has_local_name with non-matching name.
+    ///
+    /// Verifies that has_local_name returns false when the element's
+    /// local name does not match.
     #[test]
     fn has_local_name_false() {
         let html = "<div></div>";
@@ -368,6 +438,10 @@ mod tests {
         assert!(!div.has_local_name(&html5ever::local_name!("span")));
     }
 
+    /// Tests has_namespace with matching namespace.
+    ///
+    /// Verifies that has_namespace returns true when the element is in
+    /// the specified namespace.
     #[test]
     fn has_namespace_true() {
         let html = "<div></div>";
@@ -377,6 +451,10 @@ mod tests {
         assert!(div.has_namespace(&html5ever::ns!(html)));
     }
 
+    /// Tests is_same_type with matching elements.
+    ///
+    /// Verifies that is_same_type returns true for elements with the same
+    /// name and namespace.
     #[test]
     fn is_same_type_true() {
         let html = "<div></div><div></div>";
@@ -388,6 +466,10 @@ mod tests {
         assert!(div1.is_same_type(&div2));
     }
 
+    /// Tests is_same_type with different elements.
+    ///
+    /// Verifies that is_same_type returns false for elements with different
+    /// names or namespaces.
     #[test]
     fn is_same_type_false() {
         let html = "<div></div><span></span>";
@@ -398,6 +480,9 @@ mod tests {
         assert!(!div.is_same_type(&span));
     }
 
+    /// Tests is_link with anchor element.
+    ///
+    /// Verifies that is_link returns true for <a> elements with href attribute.
     #[test]
     fn is_link_true_anchor() {
         let html = r#"<a href="https://example.com">link</a>"#;
@@ -407,6 +492,9 @@ mod tests {
         assert!(a.is_link());
     }
 
+    /// Tests is_link with area element.
+    ///
+    /// Verifies that is_link returns true for <area> elements with href attribute.
     #[test]
     fn is_link_true_area() {
         let html = r#"<map><area href="https://example.com"></map>"#;
@@ -416,6 +504,9 @@ mod tests {
         assert!(area.is_link());
     }
 
+    /// Tests is_link with link element.
+    ///
+    /// Verifies that is_link returns true for <link> elements with href attribute.
     #[test]
     fn is_link_true_link() {
         let html = r#"<link href="style.css">"#;
@@ -425,6 +516,10 @@ mod tests {
         assert!(link.is_link());
     }
 
+    /// Tests is_link without href attribute.
+    ///
+    /// Verifies that is_link returns false for link elements without
+    /// an href attribute.
     #[test]
     fn is_link_false_no_href() {
         let html = "<a>not a link</a>";
@@ -434,6 +529,10 @@ mod tests {
         assert!(!a.is_link());
     }
 
+    /// Tests is_link with non-link element.
+    ///
+    /// Verifies that is_link returns false for elements that are not
+    /// link-type elements (a, area, link).
     #[test]
     fn is_link_false_wrong_element() {
         let html = r#"<div href="https://example.com">not a link</div>"#;
@@ -443,6 +542,9 @@ mod tests {
         assert!(!div.is_link());
     }
 
+    /// Tests has_id with case sensitivity.
+    ///
+    /// Verifies that ID selectors match with proper case sensitivity.
     #[test]
     fn has_id_case_sensitive() {
         let html = r#"<div id="myId"></div>"#;
@@ -451,6 +553,9 @@ mod tests {
         assert!(doc.select("#myId").unwrap().next().is_some());
     }
 
+    /// Tests has_id when ID doesn't match.
+    ///
+    /// Verifies that has_id returns false when the ID doesn't match.
     #[test]
     fn has_id_not_found() {
         let html = r#"<div id="myId"></div>"#;
@@ -459,6 +564,10 @@ mod tests {
         assert!(doc.select("#otherId").unwrap().next().is_none());
     }
 
+    /// Tests has_class with single class.
+    ///
+    /// Verifies that has_class correctly identifies elements with a
+    /// single class name.
     #[test]
     fn has_class_single() {
         let html = r#"<div class="myClass"></div>"#;
@@ -467,6 +576,10 @@ mod tests {
         assert!(doc.select(".myClass").unwrap().next().is_some());
     }
 
+    /// Tests has_class with multiple classes.
+    ///
+    /// Verifies that has_class correctly identifies a class in a space-separated
+    /// list of multiple classes.
     #[test]
     fn has_class_multiple() {
         let html = r#"<div class="class1 class2 class3"></div>"#;
@@ -475,6 +588,10 @@ mod tests {
         assert!(doc.select(".class2").unwrap().next().is_some());
     }
 
+    /// Tests has_class with whitespace in class attribute.
+    ///
+    /// Verifies that has_class correctly handles class attributes with
+    /// various whitespace characters between classes.
     #[test]
     fn has_class_with_whitespace() {
         let html = "<div class=\"class1  \t\n  class2\"></div>";
@@ -483,6 +600,10 @@ mod tests {
         assert!(doc.select(".class2").unwrap().next().is_some());
     }
 
+    /// Tests has_class when class doesn't match.
+    ///
+    /// Verifies that has_class returns false when the class is not present
+    /// in the element's class attribute.
     #[test]
     fn has_class_not_found() {
         let html = r#"<div class="myClass"></div>"#;
@@ -491,6 +612,10 @@ mod tests {
         assert!(doc.select(".otherClass").unwrap().next().is_none());
     }
 
+    /// Tests has_class with no class attribute.
+    ///
+    /// Verifies that has_class returns false when the element has no
+    /// class attribute at all.
     #[test]
     fn has_class_no_class_attr() {
         let html = "<div></div>";
@@ -499,6 +624,10 @@ mod tests {
         assert!(doc.select(".myClass").unwrap().next().is_none());
     }
 
+    /// Tests attr_matches for attribute existence.
+    ///
+    /// Verifies that attribute selectors correctly match elements that
+    /// have the specified attribute, regardless of value.
     #[test]
     fn attr_matches_exists() {
         let html = r#"<div data-value="test"></div>"#;
@@ -507,6 +636,10 @@ mod tests {
         assert!(doc.select("[data-value]").unwrap().next().is_some());
     }
 
+    /// Tests attr_matches for exact value match.
+    ///
+    /// Verifies that attribute selectors correctly match elements when
+    /// the attribute value exactly equals the specified value.
     #[test]
     fn attr_matches_exact_value() {
         let html = r#"<div data-value="test"></div>"#;
@@ -519,6 +652,10 @@ mod tests {
             .is_some());
     }
 
+    /// Tests attr_matches when value doesn't match.
+    ///
+    /// Verifies that attribute selectors return false when the attribute
+    /// value does not match the specified value.
     #[test]
     fn attr_matches_not_found() {
         let html = r#"<div data-value="test"></div>"#;
@@ -531,6 +668,10 @@ mod tests {
             .is_none());
     }
 
+    /// Tests attr_matches for substring containment.
+    ///
+    /// Verifies that attribute selectors with *= operator correctly match
+    /// when the attribute value contains the specified substring.
     #[test]
     fn attr_matches_contains() {
         let html = r#"<div data-value="hello world"></div>"#;
@@ -543,6 +684,10 @@ mod tests {
             .is_some());
     }
 
+    /// Tests attr_matches for prefix match.
+    ///
+    /// Verifies that attribute selectors with ^= operator correctly match
+    /// when the attribute value starts with the specified prefix.
     #[test]
     fn attr_matches_starts_with() {
         let html = r#"<div data-value="hello world"></div>"#;
@@ -555,6 +700,10 @@ mod tests {
             .is_some());
     }
 
+    /// Tests attr_matches for suffix match.
+    ///
+    /// Verifies that attribute selectors with $= operator correctly match
+    /// when the attribute value ends with the specified suffix.
     #[test]
     fn attr_matches_ends_with() {
         let html = r#"<div data-value="hello world"></div>"#;
@@ -567,6 +716,10 @@ mod tests {
             .is_some());
     }
 
+    /// Tests is_pseudo_element method.
+    ///
+    /// Verifies that is_pseudo_element returns false since Brik does not
+    /// support pseudo-elements in the static DOM.
     #[test]
     fn is_pseudo_element_false() {
         let html = "<div></div>";
@@ -576,6 +729,10 @@ mod tests {
         assert!(!div.is_pseudo_element());
     }
 
+    /// Tests is_html_slot_element method.
+    ///
+    /// Verifies that is_html_slot_element returns false since Brik does not
+    /// support shadow DOM slot elements.
     #[test]
     fn is_html_slot_element_false() {
         let html = "<slot></slot>";
@@ -585,6 +742,10 @@ mod tests {
         assert!(!slot.is_html_slot_element());
     }
 
+    /// Tests parent_node_is_shadow_root method.
+    ///
+    /// Verifies that parent_node_is_shadow_root returns false since Brik
+    /// does not support shadow DOM.
     #[test]
     fn parent_node_is_shadow_root_false() {
         let html = "<div><p>text</p></div>";
@@ -594,6 +755,10 @@ mod tests {
         assert!(!p.parent_node_is_shadow_root());
     }
 
+    /// Tests containing_shadow_host method.
+    ///
+    /// Verifies that containing_shadow_host returns None since Brik does
+    /// not support shadow DOM.
     #[test]
     fn containing_shadow_host_none() {
         let html = "<div></div>";
@@ -603,6 +768,10 @@ mod tests {
         assert!(div.containing_shadow_host().is_none());
     }
 
+    /// Tests is_part method.
+    ///
+    /// Verifies that is_part returns false since Brik does not support
+    /// shadow DOM parts.
     #[test]
     fn is_part_false() {
         let html = "<div></div>";
@@ -612,6 +781,10 @@ mod tests {
         assert!(!div.is_part(&html5ever::local_name!("div").into()));
     }
 
+    /// Tests imported_part method.
+    ///
+    /// Verifies that imported_part returns None since Brik does not support
+    /// shadow DOM parts.
     #[test]
     fn imported_part_none() {
         let html = "<div></div>";
@@ -623,6 +796,10 @@ mod tests {
             .is_none());
     }
 
+    /// Tests has_custom_state method.
+    ///
+    /// Verifies that has_custom_state returns false since Brik has a static
+    /// DOM and does not support custom element states.
     #[test]
     fn has_custom_state_false() {
         let html = "<div></div>";
