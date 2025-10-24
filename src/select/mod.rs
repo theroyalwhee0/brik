@@ -42,6 +42,10 @@ mod tests {
     #[cfg(feature = "namespaces")]
     use html5ever::{ns, Namespace};
 
+    /// Tests namespace-qualified type selectors.
+    ///
+    /// Verifies that selectors can match elements in specific namespaces
+    /// using the namespace prefix syntax (e.g., `svg|rect`, `svg|*`).
     #[test]
     #[cfg(feature = "namespaces")]
     fn namespace_type_selector() {
@@ -79,6 +83,10 @@ mod tests {
         assert_eq!(svg_elements.len(), 3); // svg, rect, circle
     }
 
+    /// Tests namespace-qualified attribute selectors.
+    ///
+    /// Verifies that selectors can match elements with attributes in
+    /// specific namespaces using namespace prefix syntax (e.g., `[xlink|href]`).
     #[test]
     #[cfg(feature = "namespaces")]
     fn namespace_attribute_selector() {
@@ -111,6 +119,10 @@ mod tests {
         assert_eq!(elements[0].name.local, local_name!("use"));
     }
 
+    /// Tests error handling for undefined namespace prefixes.
+    ///
+    /// Verifies that compiling a selector with an undefined namespace
+    /// prefix returns an error rather than panicking or silently failing.
     #[test]
     #[cfg(feature = "namespaces")]
     fn namespace_selector_undefined_prefix() {
@@ -124,6 +136,10 @@ mod tests {
         );
     }
 
+    /// Tests backward compatibility of selector compilation.
+    ///
+    /// Verifies that the original compile() method continues to work
+    /// for non-namespaced selectors, maintaining API compatibility.
     #[test]
     fn namespace_selector_backward_compatibility() {
         let html = r#"<div class="test">Content</div>"#;
@@ -137,6 +153,10 @@ mod tests {
         assert_eq!(elements.len(), 1);
     }
 
+    /// Tests SelectorContext builder pattern.
+    ///
+    /// Verifies that SelectorContext supports fluent builder-style
+    /// method chaining for adding namespaces and setting defaults.
     #[test]
     #[cfg(feature = "namespaces")]
     fn namespace_context_builder_pattern() {
@@ -164,6 +184,10 @@ mod tests {
         assert_eq!(rects.len(), 1);
     }
 
+    /// Tests basic selector matching functionality.
+    ///
+    /// Verifies that select() correctly finds elements matching a CSS
+    /// selector and that attribute access works properly.
     #[test]
     fn select() {
         let html = r"
@@ -191,6 +215,10 @@ mod tests {
         assert_eq!(matching, matching2);
     }
 
+    /// Tests select_first convenience method.
+    ///
+    /// Verifies that select_first() returns the first matching element
+    /// and returns an error when no elements match.
     #[test]
     fn select_first() {
         let html = r"
@@ -213,6 +241,10 @@ mod tests {
         assert!(document.select_first("p.bar").is_err());
     }
 
+    /// Tests CSS selector specificity comparison.
+    ///
+    /// Verifies that selector specificity is calculated correctly and
+    /// can be compared to determine cascade precedence.
     #[test]
     fn specificity() {
         let selectors = Selectors::compile(".example, :first-child, div").unwrap();
