@@ -8,6 +8,9 @@ pub struct DocumentData {
     pub _quirks_mode: Cell<QuirksMode>,
 }
 
+/// Methods for DocumentData.
+///
+/// Provides access to document-level properties such as quirks mode.
 impl DocumentData {
     /// The quirks mode of the document, as determined by the HTML parser.
     #[inline]
