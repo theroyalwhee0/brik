@@ -45,6 +45,10 @@ mod tests {
     use crate::parser::parse_html;
     use crate::traits::*;
 
+    /// Tests filtering elements by namespace.
+    ///
+    /// Verifies that elements_in_ns() correctly filters an element iterator
+    /// to include only elements in the specified namespace (SVG in this case).
     #[test]
     #[cfg(feature = "namespaces")]
     fn elements_in_ns_filters_by_namespace() {
@@ -73,6 +77,10 @@ mod tests {
         assert!(svg_elements.iter().all(|e| e.namespace_uri() == &ns!(svg)));
     }
 
+    /// Tests elements_in_ns with no matching elements.
+    ///
+    /// Verifies that elements_in_ns() returns an empty iterator when
+    /// no elements match the specified namespace.
     #[test]
     #[cfg(feature = "namespaces")]
     fn elements_in_ns_empty_when_no_match() {
@@ -88,6 +96,10 @@ mod tests {
         assert_eq!(svg_elements.len(), 0);
     }
 
+    /// Tests elements_in_ns with nested elements.
+    ///
+    /// Verifies that elements_in_ns() correctly includes nested elements
+    /// within the same namespace.
     #[test]
     #[cfg(feature = "namespaces")]
     fn elements_in_ns_works_with_nested_elements() {
@@ -115,6 +127,10 @@ mod tests {
         assert_eq!(svg_elements.len(), 4);
     }
 
+    /// Tests double-ended iteration with elements_in_ns.
+    ///
+    /// Verifies that elements_in_ns iterator supports both forward
+    /// and reverse iteration via next() and next_back().
     #[test]
     #[cfg(feature = "namespaces")]
     fn elements_in_ns_double_ended_iteration() {
@@ -142,6 +158,10 @@ mod tests {
         assert_eq!(last.local_name().as_ref(), "line");
     }
 
+    /// Tests detach_all removing all matched elements.
+    ///
+    /// Verifies that detach_all() successfully removes all elements
+    /// from the iterator, leaving the parent empty.
     #[test]
     fn detach_all_removes_elements() {
         let html = r#"<div><p>One</p><p>Two</p><p>Three</p></div>"#;
@@ -167,6 +187,10 @@ mod tests {
         assert_eq!(div.as_node().children().elements().count(), 0);
     }
 
+    /// Tests detach_all with an empty iterator.
+    ///
+    /// Verifies that calling detach_all() on an empty iterator does not
+    /// panic and handles the edge case gracefully.
     #[test]
     fn detach_all_with_empty_iterator() {
         let html = r#"<div><p>Test</p></div>"#;
@@ -180,6 +204,10 @@ mod tests {
             .detach_all();
     }
 
+    /// Tests detach_all with mixed namespace elements.
+    ///
+    /// Verifies that detach_all() can selectively remove elements from
+    /// one namespace while preserving elements in other namespaces.
     #[test]
     #[cfg(feature = "namespaces")]
     fn detach_all_with_mixed_namespaces() {
@@ -231,6 +259,11 @@ mod tests {
         assert_eq!(remaining_svg.len(), 0);
     }
 
+    /// Tests iterating and modifying text nodes.
+    ///
+    /// Verifies that text_nodes() correctly collects all text nodes in
+    /// a subtree and that the text content can be modified through the
+    /// returned references.
     #[test]
     fn text_nodes() {
         let html = r"
