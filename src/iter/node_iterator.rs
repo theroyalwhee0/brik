@@ -75,6 +75,10 @@ mod tests {
     use crate::iter::NodeIterator;
     use crate::parse_html;
 
+    /// Tests filtering iterator to text nodes.
+    ///
+    /// Verifies that text_nodes() correctly filters a node iterator to
+    /// include only text nodes, finding all text content in the tree.
     #[test]
     fn text_nodes() {
         let html = "<div>text1<p>text2</p>text3</div>";
@@ -86,6 +90,10 @@ mod tests {
         assert_eq!(text_nodes.len(), 3);
     }
 
+    /// Tests filtering iterator to comment nodes.
+    ///
+    /// Verifies that comments() correctly filters a node iterator to
+    /// include only comment nodes.
     #[test]
     fn comments() {
         let html = "<div><!-- comment1 --><p>text</p><!-- comment2 --></div>";
@@ -97,6 +105,10 @@ mod tests {
         assert_eq!(comments.len(), 2);
     }
 
+    /// Tests detaching all nodes in an iterator.
+    ///
+    /// Verifies that detach_all() removes all nodes in the iterator
+    /// from their parents, leaving the parent element empty.
     #[test]
     fn detach_all() {
         let html = "<div><p>One</p><p>Two</p><p>Three</p></div>";
