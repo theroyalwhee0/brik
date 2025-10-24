@@ -254,3 +254,82 @@ impl TreeSink for Sink {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::traits::*;
+    use html5ever::tree_builder::QuirksMode;
+    use html5ever::QualName;
+    use std::path::Path;
+
+    #[test]
+    fn parse_and_serialize() {
+        let html = r"
+<!doctype html>
+<title>Test case</title>
+<p>Content";
+        let document = parse_html().one(html);
+        assert_eq!(
+            document.as_document().unwrap().quirks_mode(),
+            QuirksMode::NoQuirks
+        );
+        assert_eq!(
+            document.to_string(),
+            r"<!DOCTYPE html><html><head><title>Test case</title>
+</head><body><p>Content</p></body></html>"
+        );
+    }
+
+    #[test]
+    fn parse_and_serialize_with_template() {
+        let html = r"
+<!doctype html>
+<title>Test case</title>
+<template><p>Content</p></template>";
+        let document = parse_html().one(html);
+        assert_eq!(
+            document.as_document().unwrap().quirks_mode(),
+            QuirksMode::NoQuirks
+        );
+        assert_eq!(
+            document.to_string(),
+            r"<!DOCTYPE html><html><head><title>Test case</title>
+<template><p>Content</p></template></head><body></body></html>"
+        );
+    }
+
+    #[test]
+    fn parse_and_serialize_fragment() {
+        let html = r"<tbody><tr><td>Test case";
+
+        let ctx_name = QualName::new(None, ns!(html), local_name!("tbody"));
+        let document = parse_fragment(ctx_name, vec![]).one(html);
+        assert_eq!(
+            document.as_document().unwrap().quirks_mode(),
+            QuirksMode::NoQuirks
+        );
+        assert_eq!(
+            document.to_string(),
+            r"<html><tr><td>Test case</td></tr></html>"
+        );
+    }
+
+    #[test]
+    fn parse_file() {
+        let mut path = Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf();
+        path.push("test_data");
+        path.push("foo.html");
+
+        let html = r"<!DOCTYPE html><html><head>
+        <title>Test case</title>
+    </head>
+    <body>
+        <p>Foo</p>
+    
+
+</body></html>";
+        let document = parse_html().from_utf8().from_file(&path).unwrap();
+        assert_eq!(document.to_string(), html);
+    }
+}

@@ -803,4 +803,34 @@ mod tests {
 
         assert_eq!(remaining_svg.len(), 0);
     }
+
+    #[test]
+    fn text_nodes() {
+        let html = r"
+<!doctype html>
+<title>Test case</title>
+<p>Content contains <b>Important</b> data</p>";
+        let document = parse_html().one(html);
+        let paragraph = document.select("p").unwrap().collect::<Vec<_>>();
+        assert_eq!(paragraph.len(), 1);
+        assert_eq!(
+            paragraph[0].text_contents(),
+            "Content contains Important data"
+        );
+        let texts = paragraph[0]
+            .as_node()
+            .descendants()
+            .text_nodes()
+            .collect::<Vec<_>>();
+        assert_eq!(texts.len(), 3);
+        assert_eq!(&*texts[0].borrow(), "Content contains ");
+        assert_eq!(&*texts[1].borrow(), "Important");
+        assert_eq!(&*texts[2].borrow(), " data");
+        {
+            let mut x = texts[0].borrow_mut();
+            x.truncate(0);
+            x.push_str("Content doesn't contain ");
+        }
+        assert_eq!(&*texts[0].borrow(), "Content doesn't contain ");
+    }
 }

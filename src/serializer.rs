@@ -117,3 +117,48 @@ impl NodeRef {
         self.serialize(&mut file)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::parser::parse_html;
+    use crate::traits::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn serialize_and_read_file() {
+        let tempdir = TempDir::new().unwrap();
+        let mut path = tempdir.path().to_path_buf();
+        path.push("temp.html");
+
+        let html =
+            r"<!DOCTYPE html><html><head><title>Title</title></head><body>Body</body></html>";
+        let document = parse_html().one(html);
+        let _ = document.serialize_to_file(path.clone());
+
+        let document2 = parse_html().from_utf8().from_file(&path).unwrap();
+        assert_eq!(document.to_string(), document2.to_string());
+    }
+
+    #[test]
+    fn to_string() {
+        let html = r"<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test case</title>
+    </head>
+    <body>
+        <p class=foo>Foo
+    </body>
+</html>";
+
+        let document = parse_html().one(html);
+        assert_eq!(
+            document
+                .inclusive_descendants()
+                .nth(11)
+                .unwrap()
+                .to_string(),
+            "<p class=\"foo\">Foo\n    \n</p>"
+        );
+    }
+}

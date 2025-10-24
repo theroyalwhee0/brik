@@ -34,9 +34,6 @@ mod parser;
 mod select;
 /// HTML serialization from the tree structure.
 mod serializer;
-/// Test suite.
-#[cfg(test)]
-mod tests;
 /// DOM tree structure and manipulation.
 mod tree;
 

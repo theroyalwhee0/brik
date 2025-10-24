@@ -810,4 +810,67 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(rects.len(), 1);
     }
+
+    #[test]
+    fn select() {
+        let html = r"
+<title>Test case</title>
+<p class=foo>Foo
+<p>Bar
+<p class=foo>Foo
+";
+
+        let document = parse_html().one(html);
+        let matching = document.select("p.foo").unwrap().collect::<Vec<_>>();
+        assert_eq!(matching.len(), 2);
+        let child = matching[0].as_node().first_child().unwrap();
+        assert_eq!(&**child.as_text().unwrap().borrow(), "Foo\n");
+        assert_eq!(matching[0].attributes.borrow().get("class"), Some("foo"));
+        assert_eq!(
+            matching[0].attributes.borrow().get(local_name!("class")),
+            Some("foo")
+        );
+
+        let selectors = Selectors::compile("p.foo").unwrap();
+        let matching2 = selectors
+            .filter(document.descendants().elements())
+            .collect::<Vec<_>>();
+        assert_eq!(matching, matching2);
+    }
+
+    #[test]
+    fn select_first() {
+        let html = r"
+<title>Test case</title>
+<p class=foo>Foo
+<p>Bar
+<p class=foo>Baz
+";
+
+        let document = parse_html().one(html);
+        let matching = document.select_first("p.foo").unwrap();
+        let child = matching.as_node().first_child().unwrap();
+        assert_eq!(&**child.as_text().unwrap().borrow(), "Foo\n");
+        assert_eq!(matching.attributes.borrow().get("class"), Some("foo"));
+        assert_eq!(
+            matching.attributes.borrow().get(local_name!("class")),
+            Some("foo")
+        );
+
+        assert!(document.select_first("p.bar").is_err());
+    }
+
+    #[test]
+    fn specificity() {
+        let selectors = Selectors::compile(".example, :first-child, div").unwrap();
+        let specificities = selectors
+            .0
+            .iter()
+            .map(|s| s.specificity())
+            .collect::<Vec<_>>();
+        assert_eq!(specificities.len(), 3);
+        assert!(specificities[0] == specificities[1]);
+        assert!(specificities[0] > specificities[2]);
+        assert!(specificities[1] > specificities[2]);
+    }
 }
