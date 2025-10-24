@@ -38,11 +38,18 @@ macro_rules! siblings_next {
     };
 }
 
+/// Implements Iterator for Siblings.
+///
+/// Yields sibling nodes in forward order, from the starting node
+/// toward the last sibling.
 impl Iterator for Siblings {
     type Item = NodeRef;
     siblings_next!(next, next_back, next_sibling);
 }
 
+/// Implements DoubleEndedIterator for Siblings.
+///
+/// Allows iterating siblings in reverse order by calling `next_back()`.
 impl DoubleEndedIterator for Siblings {
     siblings_next!(next_back, next, previous_sibling);
 }
