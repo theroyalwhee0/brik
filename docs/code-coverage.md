@@ -161,29 +161,7 @@ If CI fails due to coverage:
 
 - **cargo-llvm-cov**: Install with `cargo install cargo-llvm-cov`
 
-### Optional
-
-- **cargo-tarpaulin**: Alternative coverage tool
-- **codecov.io**: Online coverage reporting (not currently configured)
-
-## Coverage Goals
-
-### Current Status
-
-- ✅ Overall: ~95% (target: 90%)
-- ✅ Per-file minimum: 70%
-
-### Future Goals
-
-Consider gradually increasing thresholds:
-
-- Overall: 95% → 96% → 97%
-- Per-file: 70% → 75% → 80%
-
-Update thresholds by modifying the GitHub variables after coverage naturally increases through normal development.
-
 ## Related Documentation
 
-- [Testing Guide](testing.md) - General testing practices (if exists)
 - [Contributing Guide](../CONTRIBUTING.md) - Contribution workflow (if exists)
 - [cargo-llvm-cov Documentation](https://github.com/taiki-e/cargo-llvm-cov)
