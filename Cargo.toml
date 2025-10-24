@@ -28,6 +28,7 @@ bare_urls = "deny"
 redundant_explicit_links = "deny"
 
 [lints.clippy]
+module_inception = "forbid"
 print_stdout = "deny"
 print_stderr = "deny"
 disallowed_methods = "deny"
