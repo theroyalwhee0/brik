@@ -18,6 +18,10 @@ impl<'a> BrikParser<'a> {
     }
 }
 
+/// Implements Parser for BrikParser.
+///
+/// Provides the selectors crate parser interface for CSS selector parsing
+/// with support for pseudo-classes and namespace handling.
 impl<'i, 'a> Parser<'i> for BrikParser<'a> {
     type Impl = BrikSelectors;
     type Error = selectors::parser::SelectorParseErrorKind<'i>;
@@ -160,6 +164,10 @@ impl Selectors {
     }
 }
 
+/// Implements FromStr for Selectors.
+///
+/// Enables parsing selector strings using the standard `.parse()` method,
+/// providing a convenient alternative to `Selectors::compile()`.
 impl ::std::str::FromStr for Selectors {
     type Err = ();
     #[inline]
@@ -168,6 +176,10 @@ impl ::std::str::FromStr for Selectors {
     }
 }
 
+/// Implements Display for Selectors.
+///
+/// Formats the selector list as a comma-separated CSS selector string,
+/// useful for debugging and serialization.
 impl fmt::Display for Selectors {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use cssparser::ToCss;
@@ -184,6 +196,10 @@ impl fmt::Display for Selectors {
     }
 }
 
+/// Implements Debug for Selectors.
+///
+/// Formats the selector list using the Display implementation for
+/// more readable debug output.
 impl fmt::Debug for Selectors {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(self, f)
@@ -197,102 +213,156 @@ mod tests {
     use crate::iter::NodeIterator;
     use crate::parse_html;
 
+    /// Tests compiling a simple type selector.
+    ///
+    /// Verifies that a basic element selector compiles successfully.
     #[test]
     fn compile_simple_selector() {
         let selectors = Selectors::compile("div").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling multiple comma-separated selectors.
+    ///
+    /// Verifies that a selector list with multiple selectors compiles
+    /// to separate selector entries.
     #[test]
     fn compile_multiple_selectors() {
         let selectors = Selectors::compile("div, p, span").unwrap();
         assert_eq!(selectors.0.len(), 3);
     }
 
+    /// Tests compiling a class selector.
+    ///
+    /// Verifies that class selectors compile correctly.
     #[test]
     fn compile_class_selector() {
         let selectors = Selectors::compile(".myClass").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling an ID selector.
+    ///
+    /// Verifies that ID selectors compile correctly.
     #[test]
     fn compile_id_selector() {
         let selectors = Selectors::compile("#myId").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :any-link pseudo-class.
+    ///
+    /// Verifies that the :any-link pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_any_link() {
         let selectors = Selectors::compile("a:any-link").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :link pseudo-class.
+    ///
+    /// Verifies that the :link pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_link() {
         let selectors = Selectors::compile("a:link").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :visited pseudo-class.
+    ///
+    /// Verifies that the :visited pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_visited() {
         let selectors = Selectors::compile("a:visited").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :active pseudo-class.
+    ///
+    /// Verifies that the :active pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_active() {
         let selectors = Selectors::compile("button:active").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :focus pseudo-class.
+    ///
+    /// Verifies that the :focus pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_focus() {
         let selectors = Selectors::compile("input:focus").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :hover pseudo-class.
+    ///
+    /// Verifies that the :hover pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_hover() {
         let selectors = Selectors::compile("div:hover").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :enabled pseudo-class.
+    ///
+    /// Verifies that the :enabled pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_enabled() {
         let selectors = Selectors::compile("input:enabled").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :disabled pseudo-class.
+    ///
+    /// Verifies that the :disabled pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_disabled() {
         let selectors = Selectors::compile("input:disabled").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :checked pseudo-class.
+    ///
+    /// Verifies that the :checked pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_checked() {
         let selectors = Selectors::compile("input:checked").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling :indeterminate pseudo-class.
+    ///
+    /// Verifies that the :indeterminate pseudo-class compiles correctly.
     #[test]
     fn compile_pseudo_class_indeterminate() {
         let selectors = Selectors::compile("input:indeterminate").unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compiling unsupported pseudo-class.
+    ///
+    /// Verifies that unsupported pseudo-classes fail to compile with
+    /// an error.
     #[test]
     fn compile_unsupported_pseudo_class() {
         let result = Selectors::compile(":unsupported");
         assert!(result.is_err());
     }
 
+    /// Tests compiling invalid selector syntax.
+    ///
+    /// Verifies that malformed selectors fail to compile with an error.
     #[test]
     fn compile_invalid_syntax() {
         let result = Selectors::compile(":::");
         assert!(result.is_err());
     }
 
+    /// Tests matches method when element matches selector.
+    ///
+    /// Verifies that matches() returns true when the element matches
+    /// the compiled selector.
     #[test]
     fn matches_true() {
         let html = r#"<div class="test">content</div>"#;
@@ -303,6 +373,10 @@ mod tests {
         assert!(selectors.matches(&div));
     }
 
+    /// Tests matches method when element doesn't match selector.
+    ///
+    /// Verifies that matches() returns false when the element doesn't
+    /// match the compiled selector.
     #[test]
     fn matches_false() {
         let html = r#"<div class="test">content</div>"#;
@@ -313,6 +387,10 @@ mod tests {
         assert!(!selectors.matches(&div));
     }
 
+    /// Tests matches method with multiple selectors.
+    ///
+    /// Verifies that matches() returns true when the element matches
+    /// any selector in a selector list.
     #[test]
     fn matches_multiple_selectors() {
         let html = r#"<div class="test">content</div>"#;
@@ -323,6 +401,10 @@ mod tests {
         assert!(selectors.matches(&div));
     }
 
+    /// Tests filter method.
+    ///
+    /// Verifies that filter() correctly filters an element iterator to
+    /// include only elements matching the selector.
     #[test]
     fn filter() {
         let html = r#"<div><p class="keep">1</p><span>2</span><p class="keep">3</p></div>"#;
@@ -338,18 +420,27 @@ mod tests {
         assert!(filtered.iter().all(|e| e.name.local.as_ref() == "p"));
     }
 
+    /// Tests FromStr implementation.
+    ///
+    /// Verifies that selectors can be parsed using the .parse() method.
     #[test]
     fn from_str() {
         let selectors: Selectors = "div.test".parse().unwrap();
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests FromStr implementation with invalid syntax.
+    ///
+    /// Verifies that parsing invalid selectors returns an error.
     #[test]
     fn from_str_error() {
         let result: Result<Selectors, ()> = ":::".parse();
         assert!(result.is_err());
     }
 
+    /// Tests Display implementation with single selector.
+    ///
+    /// Verifies that Display formats a single selector correctly.
     #[test]
     fn display_single() {
         let selectors = Selectors::compile("div").unwrap();
@@ -357,6 +448,10 @@ mod tests {
         assert_eq!(display, "div");
     }
 
+    /// Tests Display implementation with multiple selectors.
+    ///
+    /// Verifies that Display formats multiple selectors as a comma-separated
+    /// list.
     #[test]
     fn display_multiple() {
         let selectors = Selectors::compile("div, p").unwrap();
@@ -366,6 +461,9 @@ mod tests {
         assert!(display.contains(", "));
     }
 
+    /// Tests Debug implementation.
+    ///
+    /// Verifies that Debug formats selectors using the Display implementation.
     #[test]
     fn debug() {
         let selectors = Selectors::compile("div.test").unwrap();
@@ -374,6 +472,10 @@ mod tests {
         assert!(debug.contains("test"));
     }
 
+    /// Tests compile_with_context with namespace-qualified selectors.
+    ///
+    /// Verifies that namespace-qualified selectors compile when the
+    /// namespace is defined in the context.
     #[test]
     #[cfg(feature = "namespaces")]
     fn compile_with_context_namespace() {
@@ -384,6 +486,10 @@ mod tests {
         assert_eq!(selectors.0.len(), 1);
     }
 
+    /// Tests compile_with_context with undefined namespace prefix.
+    ///
+    /// Verifies that using an undefined namespace prefix results in a
+    /// compilation error.
     #[test]
     #[cfg(feature = "namespaces")]
     fn compile_with_context_undefined_namespace() {
@@ -393,6 +499,10 @@ mod tests {
         assert!(result.is_err());
     }
 
+    /// Tests compile_with_context without namespace-qualified selectors.
+    ///
+    /// Verifies that regular selectors work correctly with the context-aware
+    /// compilation method.
     #[test]
     fn compile_with_context_no_namespace() {
         let context = SelectorContext::default();
