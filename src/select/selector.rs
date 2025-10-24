@@ -9,6 +9,9 @@ use std::fmt;
 /// A pre-compiled CSS Selector.
 pub struct Selector(pub(super) GenericSelector<BrikSelectors>);
 
+/// Methods for Selector.
+///
+/// Provides selector matching and specificity calculation functionality.
 impl Selector {
     /// Returns whether the given element matches this selector.
     #[inline]
@@ -31,6 +34,10 @@ impl Selector {
     }
 }
 
+/// Implements Display for Selector.
+///
+/// Formats the selector as a CSS selector string using the cssparser
+/// serialization rules.
 impl fmt::Display for Selector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use cssparser::ToCss;
@@ -38,6 +45,10 @@ impl fmt::Display for Selector {
     }
 }
 
+/// Implements Debug for Selector.
+///
+/// Delegates to Display to show the selector as a CSS string for
+/// debugging purposes.
 impl fmt::Debug for Selector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Display::fmt(self, f)
@@ -50,6 +61,10 @@ mod tests {
     use crate::parse_html;
     use crate::select::Selectors;
 
+    /// Tests selector matching when the selector matches the element.
+    ///
+    /// Verifies that matches() returns true when an element has the
+    /// class specified in the selector.
     #[test]
     fn matches_true() {
         let html = r#"<div class="test" id="myDiv">content</div>"#;
@@ -60,6 +75,10 @@ mod tests {
         assert!(selectors.0.first().unwrap().matches(&div));
     }
 
+    /// Tests selector matching when the selector does not match the element.
+    ///
+    /// Verifies that matches() returns false when an element does not
+    /// have the class specified in the selector.
     #[test]
     fn matches_false() {
         let html = r#"<div class="test">content</div>"#;
@@ -70,6 +89,10 @@ mod tests {
         assert!(!selectors.0.first().unwrap().matches(&div));
     }
 
+    /// Tests specificity calculation for ID selectors.
+    ///
+    /// Verifies that an ID selector produces a non-zero specificity value,
+    /// which is used for CSS cascade resolution.
     #[test]
     fn specificity_id() {
         let selectors = Selectors::compile("#myId").unwrap();
@@ -78,6 +101,9 @@ mod tests {
         assert!(spec.0 > 0);
     }
 
+    /// Tests specificity calculation for class selectors.
+    ///
+    /// Verifies that a class selector produces a non-zero specificity value.
     #[test]
     fn specificity_class() {
         let selectors = Selectors::compile(".myClass").unwrap();
@@ -85,6 +111,10 @@ mod tests {
         assert!(spec.0 > 0);
     }
 
+    /// Tests Display formatting of selectors.
+    ///
+    /// Verifies that the Display implementation produces a CSS selector
+    /// string containing the element and class components.
     #[test]
     fn display() {
         let selectors = Selectors::compile("div.test").unwrap();
@@ -93,6 +123,10 @@ mod tests {
         assert!(display.contains("test"));
     }
 
+    /// Tests Debug formatting of selectors.
+    ///
+    /// Verifies that the Debug implementation produces output containing
+    /// the element and ID components of the selector.
     #[test]
     fn debug() {
         let selectors = Selectors::compile("div#myId").unwrap();
