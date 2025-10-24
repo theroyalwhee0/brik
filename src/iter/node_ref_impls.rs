@@ -189,3 +189,289 @@ impl NodeRef {
         elements.next().ok_or(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::html5ever::tendril::TendrilSink;
+    use crate::parse_html;
+
+    #[test]
+    fn inclusive_preceding_siblings() {
+        let html = "<div><p>1</p><p>2</p><p id='target'>3</p><p>4</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().inclusive_preceding_siblings().collect();
+
+        // Includes target and preceding elements
+        assert_eq!(siblings.len(), 3);
+        assert_eq!(
+            siblings[0]
+                .as_element()
+                .unwrap()
+                .attributes
+                .borrow()
+                .get("id"),
+            Some("target")
+        );
+    }
+
+    #[test]
+    fn inclusive_preceding_siblings_first_child() {
+        let html = "<div><p id='target'>1</p><p>2</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().inclusive_preceding_siblings().collect();
+
+        assert_eq!(siblings.len(), 1);
+        assert_eq!(
+            siblings[0]
+                .as_element()
+                .unwrap()
+                .attributes
+                .borrow()
+                .get("id"),
+            Some("target")
+        );
+    }
+
+    #[test]
+    fn inclusive_preceding_siblings_no_parent() {
+        let doc = parse_html().one("<html></html>");
+        let siblings: Vec<_> = doc.inclusive_preceding_siblings().collect();
+        assert_eq!(siblings.len(), 1);
+    }
+
+    #[test]
+    fn preceding_siblings() {
+        let html = "<div><p>1</p><p>2</p><p id='target'>3</p><p>4</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().preceding_siblings().collect();
+
+        // Should not include the target itself, includes preceding elements
+        assert_eq!(siblings.len(), 2);
+    }
+
+    #[test]
+    fn preceding_siblings_first_child() {
+        let html = "<div><p id='target'>1</p><p>2</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().preceding_siblings().collect();
+        assert_eq!(siblings.len(), 0);
+    }
+
+    #[test]
+    fn preceding_siblings_no_parent() {
+        let doc = parse_html().one("<html></html>");
+        let siblings: Vec<_> = doc.preceding_siblings().collect();
+        assert_eq!(siblings.len(), 0);
+    }
+
+    #[test]
+    fn inclusive_following_siblings() {
+        let html = "<div><p>1</p><p id='target'>2</p><p>3</p><p>4</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().inclusive_following_siblings().collect();
+
+        assert_eq!(siblings.len(), 3);
+        assert_eq!(
+            siblings[0]
+                .as_element()
+                .unwrap()
+                .attributes
+                .borrow()
+                .get("id"),
+            Some("target")
+        );
+    }
+
+    #[test]
+    fn inclusive_following_siblings_last_child() {
+        let html = "<div><p>1</p><p id='target'>2</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().inclusive_following_siblings().collect();
+        assert_eq!(siblings.len(), 1);
+        assert_eq!(
+            siblings[0]
+                .as_element()
+                .unwrap()
+                .attributes
+                .borrow()
+                .get("id"),
+            Some("target")
+        );
+    }
+
+    #[test]
+    fn inclusive_following_siblings_no_parent() {
+        let doc = parse_html().one("<html></html>");
+        let siblings: Vec<_> = doc.inclusive_following_siblings().collect();
+        assert_eq!(siblings.len(), 1);
+    }
+
+    #[test]
+    fn following_siblings() {
+        let html = "<div><p>1</p><p id='target'>2</p><p>3</p><p>4</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().following_siblings().collect();
+
+        // Should not include the target itself
+        assert_eq!(siblings.len(), 2);
+    }
+
+    #[test]
+    fn following_siblings_last_child() {
+        let html = "<div><p>1</p><p id='target'>2</p></div>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let siblings: Vec<_> = target.as_node().following_siblings().collect();
+        assert_eq!(siblings.len(), 0);
+    }
+
+    #[test]
+    fn following_siblings_no_parent() {
+        let doc = parse_html().one("<html></html>");
+        let siblings: Vec<_> = doc.following_siblings().collect();
+        assert_eq!(siblings.len(), 0);
+    }
+
+    #[test]
+    fn children() {
+        let html = "<div><p>1</p><p>2</p><p>3</p></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let children: Vec<_> = div.as_node().children().collect();
+
+        // Should have 3 p elements
+        assert_eq!(children.len(), 3);
+        assert!(children.iter().any(|n| n.as_element().is_some()));
+    }
+
+    #[test]
+    fn children_empty() {
+        let html = "<div></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let children: Vec<_> = div.as_node().children().collect();
+        assert_eq!(children.len(), 0);
+    }
+
+    #[test]
+    fn traverse_inclusive() {
+        let html = "<div><p>text</p></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let edges: Vec<_> = div.as_node().traverse_inclusive().collect();
+
+        // Should have start and end edges for div, p, and text
+        assert_eq!(edges.len(), 6);
+    }
+
+    #[test]
+    fn traverse() {
+        let html = "<div><p>text</p></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let edges: Vec<_> = div.as_node().traverse().collect();
+
+        // Should have start and end edges for p and text (not div itself)
+        assert_eq!(edges.len(), 4);
+    }
+
+    #[test]
+    fn traverse_empty() {
+        let html = "<div></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let edges: Vec<_> = div.as_node().traverse().collect();
+        assert_eq!(edges.len(), 0);
+    }
+
+    #[test]
+    fn select_first_found() {
+        let html = "<div><p>1</p><p class='test'>2</p><p class='test'>3</p></div>";
+        let doc = parse_html().one(html);
+
+        let result = doc.select_first(".test");
+        assert!(result.is_ok());
+        let element = result.unwrap();
+        assert_eq!(element.name.local.as_ref(), "p");
+    }
+
+    #[test]
+    fn select_first_not_found() {
+        let html = "<div><p>1</p></div>";
+        let doc = parse_html().one(html);
+
+        let result = doc.select_first(".nonexistent");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn select_first_invalid_selector() {
+        let doc = parse_html().one("<div></div>");
+        let result = doc.select_first("::invalid:::");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn inclusive_ancestors() {
+        let html = "<html><body><div><p id='target'>text</p></div></body></html>";
+        let doc = parse_html().one(html);
+        let target = doc.select("#target").unwrap().next().unwrap();
+
+        let ancestors: Vec<_> = target.as_node().inclusive_ancestors().collect();
+
+        // Should include: p, div, body, html, document
+        assert_eq!(ancestors.len(), 5);
+        assert_eq!(ancestors[0].as_element().unwrap().name.local.as_ref(), "p");
+    }
+
+    #[test]
+    fn inclusive_descendants() {
+        let html = "<div><p>text</p><span>more</span></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let descendants: Vec<_> = div.as_node().inclusive_descendants().collect();
+
+        // Should include div itself plus its descendants (p, text, span, text)
+        assert_eq!(descendants.len(), 5);
+        assert_eq!(
+            descendants[0].as_element().unwrap().name.local.as_ref(),
+            "div"
+        );
+    }
+
+    #[test]
+    fn descendants() {
+        let html = "<div><p>text</p><span>more</span></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        let descendants: Vec<_> = div.as_node().descendants().collect();
+
+        // Should not include div itself (p, text, span, text)
+        assert_eq!(descendants.len(), 4);
+        assert!(descendants.iter().all(|n| n
+            .as_element()
+            .is_none_or(|e| e.name.local.as_ref() != "div")));
+    }
+}
