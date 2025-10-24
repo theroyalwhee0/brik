@@ -10,6 +10,9 @@ env:
   # Cache version - update this date to invalidate all caches
   # Can be overridden with repository variable CACHE_VERSION
   CACHE_VERSION: ${{ vars.CACHE_VERSION || '2025-10-21' }}
+  # Coverage thresholds - can be overridden with repository variables:
+  # - COVERAGE_OVERALL_THRESHOLD: minimum overall line coverage % (default: 90)
+  # - COVERAGE_PER_FILE_THRESHOLD: minimum per-file line coverage % (default: 70)
 
 jobs:
   validate:
@@ -84,6 +87,9 @@ jobs:
           fi
 
       - name: Check coverage thresholds
+        env:
+          COVERAGE_OVERALL_THRESHOLD: ${{ vars.COVERAGE_OVERALL_THRESHOLD || '90' }}
+          COVERAGE_PER_FILE_THRESHOLD: ${{ vars.COVERAGE_PER_FILE_THRESHOLD || '70' }}
         run: |
           # Get coverage report
           cargo llvm-cov --all-features --all-targets --summary-only > coverage-summary.txt
@@ -93,15 +99,17 @@ jobs:
           OVERALL_COVERAGE=$(grep '^TOTAL' coverage-summary.txt | awk '{print $10}' | sed 's/%//')
           echo "Overall coverage: ${OVERALL_COVERAGE}%"
 
-          # Check overall threshold (90%)
-          OVERALL_THRESHOLD=90
+          # Check overall threshold (default: 90%, configurable via COVERAGE_OVERALL_THRESHOLD)
+          OVERALL_THRESHOLD=${COVERAGE_OVERALL_THRESHOLD}
+          echo "Overall threshold: ${OVERALL_THRESHOLD}%"
           if awk -v cov="$OVERALL_COVERAGE" -v thresh="$OVERALL_THRESHOLD" 'BEGIN {exit !(cov < thresh)}'; then
             echo "ERROR: Overall coverage ${OVERALL_COVERAGE}% is below minimum ${OVERALL_THRESHOLD}%"
             exit 1
           fi
 
-          # Check per-file threshold (70%)
-          PER_FILE_THRESHOLD=70
+          # Check per-file threshold (default: 70%, configurable via COVERAGE_PER_FILE_THRESHOLD)
+          PER_FILE_THRESHOLD=${COVERAGE_PER_FILE_THRESHOLD}
+          echo "Per-file threshold: ${PER_FILE_THRESHOLD}%"
           LOW_COVERAGE_FILES=$(grep 'brik/src' coverage-summary.txt | grep -v '100.00%' | awk -v thresh="$PER_FILE_THRESHOLD" '{
             line_cov=$(NF-3)
             gsub(/%/, "", line_cov)
