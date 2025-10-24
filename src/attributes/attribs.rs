@@ -1,4 +1,6 @@
-use html5ever::{LocalName, Namespace, Prefix};
+use html5ever::LocalName;
+#[cfg(feature = "namespaces")]
+use html5ever::{Namespace, Prefix};
 use indexmap::{map::Entry, IndexMap};
 
 use super::{Attribute, ExpandedName};
@@ -62,20 +64,25 @@ impl Attributes {
     ///
     /// Similar to DOM's `getAttributeNS()`.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
     /// # #[macro_use] extern crate html5ever;
-    /// use brik::parse_html;
-    /// use brik::traits::*;
-    ///
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// # use brik::parse_html;
+    /// # use brik::traits::*;
     /// let doc = parse_html().one(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100"/>"#);
     /// let svg = doc.select_first("svg").unwrap();
     /// let attrs = svg.attributes.borrow();
     ///
     /// // SVG width attribute is in the null namespace
     /// assert_eq!(attrs.get_ns(&ns!(), &local_name!("width")), Some("100"));
+    /// }
     /// ```
+    #[cfg(feature = "namespaces")]
     pub fn get_ns<N, L>(&self, namespace: N, local_name: L) -> Option<&str>
     where
         N: Into<Namespace>,
@@ -90,13 +97,16 @@ impl Attributes {
     ///
     /// Similar to DOM's `hasAttributeNS()`.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
     /// # #[macro_use] extern crate html5ever;
-    /// use brik::parse_html;
-    /// use brik::traits::*;
-    ///
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// # use brik::parse_html;
+    /// # use brik::traits::*;
     /// let doc = parse_html().one(r#"<div class="test">Content</div>"#);
     /// let div = doc.select_first("div").unwrap();
     /// let attrs = div.attributes.borrow();
@@ -104,7 +114,9 @@ impl Attributes {
     /// // class attribute is in the null namespace
     /// assert!(attrs.has_ns(&ns!(), &local_name!("class")));
     /// assert!(!attrs.has_ns(&ns!(), &local_name!("id")));
+    /// }
     /// ```
+    #[cfg(feature = "namespaces")]
     pub fn has_ns<N, L>(&self, namespace: N, local_name: L) -> bool
     where
         N: Into<Namespace>,
@@ -118,9 +130,13 @@ impl Attributes {
     ///
     /// Similar to DOM's `setAttributeNS()`.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
     /// use brik::{Attributes, Attribute};
     /// use html5ever::{LocalName, Namespace};
     ///
@@ -139,7 +155,9 @@ impl Attributes {
     ///     attrs.get_ns("http://example.com/ns", "custom"),
     ///     Some("value")
     /// );
+    /// }
     /// ```
+    #[cfg(feature = "namespaces")]
     pub fn insert_ns<N, L>(
         &mut self,
         namespace: N,
@@ -161,13 +179,16 @@ impl Attributes {
     ///
     /// Similar to DOM's `removeAttributeNS()`.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
     /// # #[macro_use] extern crate html5ever;
-    /// use brik::parse_html;
-    /// use brik::traits::*;
-    ///
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// # use brik::parse_html;
+    /// # use brik::traits::*;
     /// let doc = parse_html().one(r#"<div class="test">Content</div>"#);
     /// let div = doc.select_first("div").unwrap();
     /// let mut attrs = div.attributes.borrow_mut();
@@ -175,7 +196,9 @@ impl Attributes {
     /// assert!(attrs.has_ns(&ns!(), &local_name!("class")));
     /// attrs.remove_ns(&ns!(), &local_name!("class"));
     /// assert!(!attrs.has_ns(&ns!(), &local_name!("class")));
+    /// }
     /// ```
+    #[cfg(feature = "namespaces")]
     pub fn remove_ns<N, L>(&mut self, namespace: N, local_name: L) -> Option<Attribute>
     where
         N: Into<Namespace>,
@@ -189,13 +212,16 @@ impl Attributes {
     ///
     /// Yields (local_name, value) pairs for each attribute in the given namespace.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
     /// # #[macro_use] extern crate html5ever;
-    /// use brik::parse_html;
-    /// use brik::traits::*;
-    ///
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// # use brik::parse_html;
+    /// # use brik::traits::*;
     /// let doc = parse_html().one(r#"<div class="test" id="main" data-value="foo">Content</div>"#);
     /// let div = doc.select_first("div").unwrap();
     /// let attrs = div.attributes.borrow();
@@ -207,7 +233,9 @@ impl Attributes {
     /// assert_eq!(null_ns_attrs.len(), 3);
     /// assert_eq!(null_ns_attrs[0].0.as_ref(), "class");
     /// assert_eq!(null_ns_attrs[0].1, "test");
+    /// }
     /// ```
+    #[cfg(feature = "namespaces")]
     pub fn attrs_in_ns<N>(&self, namespace: N) -> impl Iterator<Item = (&LocalName, &str)>
     where
         N: Into<Namespace>,
@@ -231,9 +259,13 @@ impl Attributes {
     /// The attribute's local name is the prefix (e.g., `xmlns:tmpl` has local name `tmpl`),
     /// and the attribute value is the namespace URI.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
     /// use brik::Attributes;
     /// use html5ever::{Namespace, LocalName, Prefix};
     ///
@@ -262,7 +294,9 @@ impl Attributes {
     /// // The custom namespace declaration should still be present
     /// assert!(attrs.has_ns(&xmlns_ns, "custom"));
     /// assert!(!attrs.has_ns(&xmlns_ns, "tmpl"));
+    /// }
     /// ```
+    #[cfg(feature = "namespaces")]
     pub fn remove_xmlns_for(&mut self, namespace_uri: &str) {
         let xmlns_ns = Namespace::from("http://www.w3.org/2000/xmlns/");
 
@@ -288,11 +322,15 @@ impl Attributes {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "namespaces")]
     use super::*;
+    #[cfg(feature = "namespaces")]
     use crate::parser::parse_html;
+    #[cfg(feature = "namespaces")]
     use crate::traits::*;
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn get_ns_null_namespace() {
         let doc = parse_html().one(r#"<div class="test" id="main">Content</div>"#);
         let div = doc.select_first("div").unwrap();
@@ -305,6 +343,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn get_ns_svg_namespace() {
         let svg_html = r#"<!DOCTYPE html>
 <html>
@@ -324,6 +363,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn has_ns_checks_existence() {
         let doc = parse_html().one(r#"<div class="test">Content</div>"#);
         let div = doc.select_first("div").unwrap();
@@ -335,6 +375,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn insert_ns_adds_attribute() {
         let mut attrs = Attributes {
             map: Default::default(),
@@ -354,6 +395,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn insert_ns_replaces_existing() {
         let mut attrs = Attributes {
             map: Default::default(),
@@ -368,6 +410,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn remove_ns_removes_attribute() {
         let doc = parse_html().one(r#"<div class="test" id="main">Content</div>"#);
         let div = doc.select_first("div").unwrap();
@@ -383,6 +426,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn remove_ns_returns_none_when_missing() {
         let doc = parse_html().one(r#"<div>Content</div>"#);
         let div = doc.select_first("div").unwrap();
@@ -393,6 +437,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn attrs_in_ns_iterates_null_namespace() {
         let doc = parse_html().one(r#"<div class="test" id="main" data-value="foo">Content</div>"#);
         let div = doc.select_first("div").unwrap();
@@ -411,6 +456,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn attrs_in_ns_empty_when_no_match() {
         let doc = parse_html().one(r#"<div class="test">Content</div>"#);
         let div = doc.select_first("div").unwrap();
@@ -422,6 +468,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn attrs_in_ns_custom_namespace() {
         let mut attrs = Attributes {
             map: Default::default(),
@@ -443,6 +490,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_removes_matching_declarations() {
         let mut attrs = Attributes {
             map: Default::default(),
@@ -472,6 +520,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_removes_multiple_declarations() {
         let mut attrs = Attributes {
             map: Default::default(),
@@ -506,6 +555,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_no_match() {
         let mut attrs = Attributes {
             map: Default::default(),
@@ -526,6 +576,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_empty_attributes() {
         let mut attrs = Attributes {
             map: Default::default(),
@@ -536,6 +587,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn remove_xmlns_for_doesnt_remove_regular_attributes() {
         let mut attrs = Attributes {
             map: Default::default(),

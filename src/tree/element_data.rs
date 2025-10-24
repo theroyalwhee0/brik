@@ -22,9 +22,13 @@ pub struct ElementData {
 impl ElementData {
     /// Returns the namespace URI of the element.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
     /// use brik::parse_html;
     /// use brik::traits::*;
     ///
@@ -32,8 +36,10 @@ impl ElementData {
     /// let div = doc.select_first("div").unwrap();
     /// // HTML elements use the XHTML namespace
     /// assert_eq!(div.namespace_uri().as_ref(), "http://www.w3.org/1999/xhtml");
+    /// }
     /// ```
     #[inline]
+    #[cfg(feature = "namespaces")]
     pub fn namespace_uri(&self) -> &html5ever::Namespace {
         &self.name.ns
     }
@@ -57,9 +63,13 @@ impl ElementData {
 
     /// Returns the namespace prefix of the element, if any.
     ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
     /// # Examples
     ///
     /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
     /// use brik::parse_html;
     /// use brik::traits::*;
     ///
@@ -67,8 +77,10 @@ impl ElementData {
     /// let div = doc.select_first("div").unwrap();
     /// // HTML elements typically have no prefix
     /// assert_eq!(div.prefix(), None);
+    /// }
     /// ```
     #[inline]
+    #[cfg(feature = "namespaces")]
     pub fn prefix(&self) -> Option<&html5ever::Prefix> {
         self.name.prefix.as_ref()
     }
@@ -80,6 +92,7 @@ mod tests {
     use crate::traits::*;
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn element_namespace_uri() {
         // Test HTML element namespace
         let html = r"<!DOCTYPE html><html><body><div>Test</div></body></html>";
@@ -119,6 +132,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "namespaces")]
     fn element_prefix() {
         // Regular HTML elements have no prefix
         let html = r"<!DOCTYPE html><html><body><div>Test</div></body></html>";
