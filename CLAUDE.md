@@ -133,5 +133,5 @@
 
 - Run `cargo clippy --all-targets` before committing
 - Address all clippy warnings
-- See `Cargo.toml` for enabled lints (many documentation lints are currently disabled but should be enabled incrementally)
+- All documentation lints are enabled and enforced (see `[lints.rustdoc]` and `[lints.clippy]` in `Cargo.toml`)
 - Examples may use `#![allow(clippy::print_stdout)]` when appropriate
