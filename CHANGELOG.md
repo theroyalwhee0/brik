@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2025-10-24
+
 ### Added
 
 - Namespace support for XML and SVG documents behind `namespaces` feature flag (#15, #21, #23, #29)
@@ -53,5 +55,6 @@ See [docs/historical-changelog.md](docs/historical-changelog.md) for details.
 **Historical Note**: This project was originally created by Simon Sapin as `kuchiki`,
 maintained by Brave Browser as `kuchikiki`, and is now maintained as `brik`.
 
-[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.8.2...HEAD
+[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/theroyalwhee0/brik/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/theroyalwhee0/brik/releases/tag/v0.8.2

@@ -1,5 +1,31 @@
 # Project Coding Standards
 
+## Workflow
+
+### Working with GitHub Issues
+
+- **ALWAYS use `focus-issue <number>` to start work on an issue** - this command:
+  - Fetches the issue details and saves them to `.focus/Task.md`
+  - Creates or switches to the appropriate issue branch
+  - Handles branch management and cleanup automatically
+  - Archives previous `.focus/` directories to keep workspace clean
+- **DO NOT manually**:
+  - Use `gh issue view` - the focus-issue command does this for you
+  - Create issue branches - the focus-issue command handles this
+  - Manually create `.focus/` directories - always use focus-issue
+
+**Example:**
+
+```bash
+# Start working on issue #41
+focus-issue 41
+
+# The command automatically:
+# - Fetches issue content to .focus/Task.md
+# - Creates/switches to branch 41-publish-v090
+# - Archives any previous .focus directory
+```
+
 ## Communication
 
 - **Time estimates**: Don't include time estimates unless explicitly requested
