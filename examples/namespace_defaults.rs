@@ -43,23 +43,29 @@ fn main() {
     let ns_defaults = NsDefaultsBuilder::new()
         .namespace("svg", ns!(svg))
         .namespace("custom", "http://example.com/custom-namespace")
-        .from_str(html);
+        .from_string(html)
+        .expect("Failed to parse HTML");
 
     println!("Registered namespaces:");
     println!("  - svg: http://www.w3.org/2000/svg");
     println!("  - custom: http://example.com/custom-namespace\n");
 
     println!("Processed HTML:");
-    println!("{}\n", ns_defaults.as_str());
+    println!("{ns_defaults}\n");
 
-    // NsDefaults can be used in multiple ways:
-    // 1. As a &str reference (via AsRef<str>):
+    // NsDefaults can be used with html5ever in multiple ways:
+    //
+    // 1. Non-consuming: Use as_str() or as_ref() to borrow the HTML:
+    //    let document = parse_html().one(ns_defaults.as_str());
     //    let document = parse_html().one(ns_defaults.as_ref());
     //
-    // 2. Borrowed via .as_str():
-    //    let document = parse_html().one(ns_defaults.as_str());
+    // 2. Consuming: Convert directly to StrTendril for .one():
+    //    let document = parse_html().one(ns_defaults);
     //
-    // 3. Converted to String (consuming it via Into<String>):
+    // 3. Consuming: Use as an iterator with .from_iter():
+    //    let document = parse_html().from_iter(ns_defaults);
+    //
+    // 4. Consuming: Convert to String first:
     //    let html_string: String = ns_defaults.into();
     //    let document = parse_html().one(&html_string);
 

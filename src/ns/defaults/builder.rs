@@ -1,6 +1,8 @@
 use html5ever::Namespace;
 use std::collections::HashMap;
 
+use crate::ns::{defaults::parse::parse_preamble, NsResult};
+
 use super::nsdefaults::NsDefaults;
 
 /// Builder for configuring namespace defaults.
@@ -67,7 +69,12 @@ impl NsDefaultsBuilder {
     ///
     /// # Arguments
     ///
-    /// * `html` - The HTML string to process
+    /// * `html` - The HTML string to process (takes ownership)
+    ///
+    /// # Errors
+    ///
+    /// Returns `NsError::ParseError` if the HTML cannot be parsed or the
+    /// `<html>` tag is not found in the document.
     ///
     /// # Examples
     ///
@@ -76,14 +83,21 @@ impl NsDefaultsBuilder {
     ///
     /// let ns_defaults = NsDefaultsBuilder::new()
     ///     .namespace("custom", "http://example.com/ns")
-    ///     .from_str("<html><body>Hello</body></html>");
+    ///     .from_string("<html><body>Hello</body></html>".to_string());
     /// ```
-    pub fn from_str(self, html: impl AsRef<str>) -> NsDefaults {
-        // TODO: Implement namespace injection logic.
-        NsDefaults {
-            html: html.as_ref().to_string(),
+    pub fn from_string(self, html: impl Into<String>) -> NsResult<NsDefaults> {
+        let html = html.into();
+        let tag_info = parse_preamble(&html)?;
+
+        // Build the xmlns declarations to add.
+        let added_xmlns = build_xmlns_declarations(&self.namespaces, &tag_info, &html);
+
+        Ok(NsDefaults {
+            html,
             namespaces: self.namespaces,
-        }
+            tag_info,
+            added_xmlns,
+        })
     }
 }
 
@@ -94,4 +108,36 @@ impl Default for NsDefaultsBuilder {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Builds the xmlns declarations string for namespaces that need to be added.
+///
+/// Compares the configured namespaces against the existing xmlns attributes
+/// in the HTML and returns a string containing the missing declarations.
+fn build_xmlns_declarations(
+    namespaces: &HashMap<String, Namespace>,
+    tag_info: &super::parse::HtmlTagInfo,
+    html: &str,
+) -> String {
+    if namespaces.is_empty() {
+        return String::new();
+    }
+
+    // Collect existing xmlns prefixes from the HTML.
+    let mut existing_prefixes = std::collections::HashSet::new();
+    for i in 0..tag_info.existing_xmlns.len() {
+        if let Ok(prefix) = tag_info.get_prefix(i, html) {
+            existing_prefixes.insert(prefix.to_string());
+        }
+    }
+
+    // Build xmlns declarations for missing namespaces.
+    let mut declarations = String::new();
+    for (prefix, uri) in namespaces {
+        if !existing_prefixes.contains(prefix) {
+            declarations.push_str(&format!(" xmlns:{prefix}=\"{uri}\""));
+        }
+    }
+
+    declarations
 }
