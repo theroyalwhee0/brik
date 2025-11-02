@@ -58,3 +58,59 @@ impl std::fmt::Display for NsError {
 ///
 /// Allows NsError to be used with Rust's standard error handling mechanisms.
 impl std::error::Error for NsError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Tests Display formatting for ParseError variant.
+    ///
+    /// Verifies that ParseError produces correctly formatted error messages.
+    #[test]
+    fn test_display_parse_error() {
+        let error = NsError::ParseError("Failed to parse HTML".to_string());
+        let display = format!("{error}");
+        assert_eq!(display, "NS Parse error: Failed to parse HTML");
+    }
+
+    /// Tests Display formatting for InvalidSlice variant.
+    ///
+    /// Verifies that InvalidSlice produces correctly formatted error messages.
+    #[test]
+    fn test_display_invalid_slice() {
+        let error = NsError::InvalidSlice("Index out of bounds".to_string());
+        let display = format!("{error}");
+        assert_eq!(display, "NS Invalid slice: Index out of bounds");
+    }
+
+    /// Tests that NsError implements std::error::Error trait.
+    ///
+    /// Verifies that NsError can be used with error handling mechanisms.
+    #[test]
+    fn test_error_trait() {
+        use std::error::Error;
+
+        let error = NsError::ParseError("test".to_string());
+        // Calling source() verifies Error trait is implemented.
+        assert!(error.source().is_none());
+
+        let error = NsError::InvalidSlice("test".to_string());
+        assert!(error.source().is_none());
+    }
+
+    /// Tests Debug formatting for NsError variants.
+    ///
+    /// Verifies that Debug is properly derived and formats correctly.
+    #[test]
+    fn test_debug_formatting() {
+        let parse_error = NsError::ParseError("test parse".to_string());
+        let debug = format!("{parse_error:?}");
+        assert!(debug.contains("ParseError"));
+        assert!(debug.contains("test parse"));
+
+        let slice_error = NsError::InvalidSlice("test slice".to_string());
+        let debug = format!("{slice_error:?}");
+        assert!(debug.contains("InvalidSlice"));
+        assert!(debug.contains("test slice"));
+    }
+}
