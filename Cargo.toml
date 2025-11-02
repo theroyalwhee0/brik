@@ -28,7 +28,7 @@ name = "template_processing"
 required-features = ["namespaces"]
 
 [[example]]
-name = "namespace_defaults"
+name = "ns_defaults"
 required-features = ["namespaces"]
 
 [lints.rust]

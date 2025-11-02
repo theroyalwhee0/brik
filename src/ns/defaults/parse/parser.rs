@@ -1,11 +1,8 @@
 use super::preamble::{HtmlPreamble, Rule};
-use super::tag_info::HtmlTagInfo;
+use super::tag_info::{HtmlTagInfo, XmlnsPositions};
 use crate::ns::{NsError, NsResult};
 use pest::iterators::Pair;
 use pest::Parser;
-
-/// Type alias for xmlns attribute positions: ((prefix_start, prefix_end), (uri_start, uri_end)).
-type XmlnsPositions = ((usize, usize), (usize, usize));
 
 /// Parses the top of an HTML document to locate and analyze the `<html>` tag.
 ///
@@ -30,9 +27,13 @@ type XmlnsPositions = ((usize, usize), (usize, usize));
 /// # Errors
 ///
 /// Returns `NsError::ParseError` if:
-/// - The HTML structure cannot be parsed by the Pest grammar
 /// - The `<html>` tag is not found in the document
-/// - The parsed structure is malformed
+/// - The `<html>` tag attributes are malformed
+/// - The HTML structure cannot be parsed by the Pest grammar
+///
+/// Note: The parser is forgiving with malformed preambles (comments, DOCTYPEs, etc.)
+/// and will skip over them to find the `<html>` tag. However, the `<html>` tag
+/// itself must be well-formed
 ///
 /// # Examples
 ///
@@ -231,6 +232,18 @@ mod tests {
 
         let result = parse_preamble(html);
         assert!(result.is_ok());
+    }
+
+    /// Tests that missing html tag returns an error.
+    ///
+    /// Verifies that documents without an html tag return an appropriate error.
+    #[test]
+    fn parse_missing_html_tag() {
+        let html = r#"<!DOCTYPE html>
+<body>Hello</body>"#;
+
+        let result = parse_preamble(html);
+        assert!(result.is_err());
     }
 
     /// Tests parsing HTML with processing instructions.

@@ -21,6 +21,21 @@ use pest_derive::Parser;
 /// - All attribute formats (boolean, empty, quoted, unquoted)
 /// - Self-closing tags (`/>`)
 ///
+/// # Robustness
+///
+/// The parser is forgiving with malformed preambles:
+/// - Malformed or unclosed comments/PIs/DOCTYPEs in the preamble are skipped
+/// - The parser focuses on finding the `<html>` tag
+/// - Content that doesn't match known constructs is consumed until `<html>` is found
+///
+/// However, the `<html>` tag itself must be well-formed:
+/// - The `<html>` tag must be present in the document
+/// - Attributes on the `<html>` tag must be properly formatted
+///
+/// This design allows the parser to handle real-world HTML that may have
+/// quirks in the preamble, while still reliably extracting namespace information
+/// from the `<html>` tag.
+///
 /// # Examples
 ///
 /// ```ignore

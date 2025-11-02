@@ -6,4 +6,4 @@ mod preamble;
 mod tag_info;
 
 pub use parser::parse_preamble;
-pub use tag_info::HtmlTagInfo;
+pub use tag_info::{HtmlTagInfo, Span, XmlnsPositions};

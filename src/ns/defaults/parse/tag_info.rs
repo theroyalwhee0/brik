@@ -1,5 +1,11 @@
 use crate::ns::{NsError, NsResult};
 
+/// A byte position span in the source HTML (start, end).
+pub type Span = (usize, usize);
+
+/// Positions for an xmlns attribute: (prefix_span, uri_span).
+pub type XmlnsPositions = (Span, Span);
+
 /// Information about the parsed HTML tag.
 ///
 /// This struct contains the position information and existing namespace
@@ -16,9 +22,10 @@ pub struct HtmlTagInfo {
     pub tag_close_start: usize,
     /// Position after the tag close (after `>` or `/>`).
     pub tag_end: usize,
-    /// Map of existing xmlns attributes with their positions in the source HTML.
-    /// Each entry maps a prefix (as byte positions: start, end) to a URI (as byte positions: start, end).
-    pub existing_xmlns: Vec<((usize, usize), (usize, usize))>,
+    /// Existing xmlns attributes with their positions in the source HTML.
+    /// Each entry contains a prefix span and a URI span.
+    /// Use the helper methods to extract the actual strings.
+    pub(crate) existing_xmlns: Vec<XmlnsPositions>,
 }
 
 /// Methods for HtmlTagInfo.
@@ -26,6 +33,21 @@ pub struct HtmlTagInfo {
 /// Provides helper methods to extract slices from the original HTML string
 /// using the stored position information.
 impl HtmlTagInfo {
+    /// Returns the number of existing xmlns attributes.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use brik::ns::defaults::parse::parse_preamble;
+    ///
+    /// let html = r#"<html xmlns:svg="..." xmlns:custom="...">"#;
+    /// let info = parse_preamble(html).unwrap();
+    /// assert_eq!(info.xmlns_count(), 2);
+    /// ```
+    pub fn xmlns_count(&self) -> usize {
+        self.existing_xmlns.len()
+    }
+
     /// Returns the namespace prefix at the given index.
     ///
     /// Extracts a slice from the HTML string corresponding to the namespace prefix

@@ -1,6 +1,4 @@
 use html5ever::tendril::StrTendril;
-use html5ever::Namespace;
-use std::collections::HashMap;
 
 use super::parse::HtmlTagInfo;
 
@@ -9,12 +7,27 @@ use super::parse::HtmlTagInfo;
 /// This struct contains the original HTML string and information about
 /// which namespace declarations need to be added. The actual string
 /// concatenation is deferred until the HTML is consumed or converted.
+///
+/// # Slice-Based Design
+///
+/// NsDefaults uses a slice-based approach to avoid unnecessary allocations:
+/// - The original HTML is stored unchanged
+/// - Namespace declarations to add are stored separately
+/// - The insertion position in the `<html>` tag is recorded
+/// - String concatenation only happens when converting to output
+///
+/// This enables efficient integration with html5ever through three conversion paths:
+/// - `Into<String>`: Allocates and returns the complete modified HTML
+/// - `From<NsDefaults> for StrTendril`: Converts to html5ever's string type
+/// - `IntoIterator`: Yields slices for zero-copy parsing with `parse_html().from_iter()`
+///
+/// # Performance
+///
+/// The zero-copy `IntoIterator` path is most efficient when feeding directly
+/// to html5ever's parser, as it avoids intermediate string allocation.
 pub struct NsDefaults {
     /// The original HTML string (unchanged).
     pub(super) html: String,
-    /// Map of namespace prefixes to their URIs that were configured.
-    #[allow(dead_code)] // Stored for potential future use.
-    pub(super) namespaces: HashMap<String, Namespace>,
     /// Information about the parsed HTML tag.
     pub(super) tag_info: HtmlTagInfo,
     /// The namespace declarations to add (e.g., " xmlns:svg=\"...\"").
@@ -49,9 +62,7 @@ impl NsDefaults {
             self.html.clone()
         } else {
             // Add namespace declarations at tag_close_start position.
-            let mut result = String::with_capacity(
-                self.html.len() + self.added_xmlns.len(),
-            );
+            let mut result = String::with_capacity(self.html.len() + self.added_xmlns.len());
             result.push_str(&self.html[..self.tag_info.tag_close_start]);
             result.push_str(&self.added_xmlns);
             result.push_str(&self.html[self.tag_info.tag_close_start..]);
@@ -85,7 +96,7 @@ impl std::fmt::Display for NsDefaults {
     }
 }
 
-/// Implements Into<String> for NsDefaults.
+/// Implements `Into<String>` for NsDefaults.
 ///
 /// Allows converting NsDefaults into a String by consuming the instance
 /// and returning the processed HTML with namespace declarations added.
@@ -95,7 +106,7 @@ impl From<NsDefaults> for String {
     }
 }
 
-/// Implements From<NsDefaults> for StrTendril.
+/// Implements `From<NsDefaults>` for StrTendril.
 ///
 /// Allows NsDefaults to be consumed and converted into a StrTendril,
 /// which can be used with html5ever's `.one()` method.
@@ -107,18 +118,43 @@ impl From<NsDefaults> for StrTendril {
     }
 }
 
-/// Implements IntoIterator for NsDefaults.
+/// Implements `IntoIterator` for NsDefaults.
 ///
 /// Yields string slices as StrTendrils: the HTML before the addition point,
 /// the added namespace declarations, and the HTML after the addition point.
 /// This can be used with html5ever's `.from_iter()` method.
+///
+/// # Performance Benefits
+///
+/// This is the most efficient way to use NsDefaults with html5ever because:
+/// - No intermediate string allocation (unlike `Into<String>`)
+/// - html5ever can directly consume the slice iterator
+/// - Minimal memory overhead for namespace injection
+///
+/// # Examples
+///
+/// ```ignore
+/// use brik::ns::NsDefaultsBuilder;
+/// use brik::parse_html;
+///
+/// let ns_defaults = NsDefaultsBuilder::new()
+///     .namespace("svg", "http://www.w3.org/2000/svg")
+///     .from_string("<html><body><svg:rect /></body></html>")?;
+///
+/// // Zero-copy parsing with html5ever
+/// let document = parse_html().from_iter(ns_defaults);
+/// ```
 impl IntoIterator for NsDefaults {
     type Item = StrTendril;
     type IntoIter = std::vec::IntoIter<StrTendril>;
 
     fn into_iter(self) -> Self::IntoIter {
         let slices = self.slices();
-        slices.into_iter().map(StrTendril::from).collect::<Vec<_>>().into_iter()
+        slices
+            .into_iter()
+            .map(StrTendril::from)
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 }
 
@@ -134,7 +170,6 @@ mod tests {
         let html = "<html><body>Test</body></html>";
         let ns_defaults = NsDefaults {
             html: html.to_string(),
-            namespaces: HashMap::new(),
             tag_info: HtmlTagInfo {
                 tag_start: 0,
                 tag_close_start: 5,
@@ -155,7 +190,6 @@ mod tests {
         let html = "<html><body>Test</body></html>";
         let ns_defaults = NsDefaults {
             html: html.to_string(),
-            namespaces: HashMap::new(),
             tag_info: HtmlTagInfo {
                 tag_start: 0,
                 tag_close_start: 5,
@@ -177,7 +211,6 @@ mod tests {
         let html = "<html><body>Test</body></html>";
         let ns_defaults = NsDefaults {
             html: html.to_string(),
-            namespaces: HashMap::new(),
             tag_info: HtmlTagInfo {
                 tag_start: 0,
                 tag_close_start: 5,
@@ -200,7 +233,6 @@ mod tests {
         let html = "<html><body>Test</body></html>";
         let ns_defaults = NsDefaults {
             html: html.to_string(),
-            namespaces: HashMap::new(),
             tag_info: HtmlTagInfo {
                 tag_start: 0,
                 tag_close_start: 5,
@@ -222,7 +254,6 @@ mod tests {
         let html = "<html><body>Test</body></html>";
         let ns_defaults = NsDefaults {
             html: html.to_string(),
-            namespaces: HashMap::new(),
             tag_info: HtmlTagInfo {
                 tag_start: 0,
                 tag_close_start: 5,
@@ -245,7 +276,6 @@ mod tests {
         let html = "<html><body>Test</body></html>";
         let ns_defaults = NsDefaults {
             html: html.to_string(),
-            namespaces: HashMap::new(),
             tag_info: HtmlTagInfo {
                 tag_start: 0,
                 tag_close_start: 5,
@@ -258,7 +288,10 @@ mod tests {
         let tendrils: Vec<StrTendril> = ns_defaults.into_iter().collect();
         assert_eq!(tendrils.len(), 3);
         assert_eq!(tendrils[0].as_ref(), "<html");
-        assert_eq!(tendrils[1].as_ref(), " xmlns:svg=\"http://www.w3.org/2000/svg\"");
+        assert_eq!(
+            tendrils[1].as_ref(),
+            " xmlns:svg=\"http://www.w3.org/2000/svg\""
+        );
         assert_eq!(tendrils[2].as_ref(), "><body>Test</body></html>");
     }
 }

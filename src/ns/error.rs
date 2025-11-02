@@ -1,9 +1,37 @@
 /// Errors that can occur during namespace parsing operations.
+///
+/// This enum distinguishes between two types of errors:
+/// - Parsing errors occur when the HTML structure cannot be parsed
+/// - Slice errors occur when extracting positions from parsed HTML fails
 #[derive(Debug)]
 pub enum NsError {
     /// Failed to parse HTML structure.
+    ///
+    /// This error occurs when the Pest parser cannot parse the HTML preamble,
+    /// typically due to malformed HTML or when required elements (like `<html>`)
+    /// cannot be found.
+    ///
+    /// # Examples
+    ///
+    /// ```text
+    /// NS Parse error: Failed to parse HTML: unexpected token
+    /// NS Parse error: No <html> tag found in preamble
+    /// ```
     ParseError(String),
+
     /// Invalid slice position or index.
+    ///
+    /// This error occurs when extracting slice positions from parsed HTML fails,
+    /// typically due to index out of bounds or invalid position calculations.
+    /// This indicates an internal inconsistency between the parser and slice
+    /// extraction logic.
+    ///
+    /// # Examples
+    ///
+    /// ```text
+    /// NS Invalid slice: Index out of bounds
+    /// NS Invalid slice: Invalid prefix position
+    /// ```
     InvalidSlice(String),
 }
 
