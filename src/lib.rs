@@ -36,6 +36,9 @@ mod select;
 mod serializer;
 /// DOM tree structure and manipulation.
 mod tree;
+/// Namespace specifics.
+#[cfg(feature = "namespaces")]
+pub mod ns;
 
 pub use attributes::{Attribute, Attributes, ExpandedName};
 pub use node_data_ref::NodeDataRef;
