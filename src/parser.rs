@@ -1,11 +1,10 @@
+use crate::attributes;
+use crate::tree::NodeRef;
 use html5ever::tendril::StrTendril;
 use html5ever::tree_builder::{ElementFlags, NodeOrText, QuirksMode, TreeSink};
 use html5ever::{self, Attribute, ExpandedName, QualName};
 use std::borrow::Cow;
 use std::cell::RefCell;
-
-use crate::attributes;
-use crate::tree::NodeRef;
 
 /// Options for the HTML parser.
 #[derive(Default)]

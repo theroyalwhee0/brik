@@ -1,14 +1,12 @@
+use super::{Doctype, DocumentData, ElementData, Node, NodeData};
+use crate::attributes::{Attribute, Attributes, ExpandedName};
+use crate::cell_extras::*;
+use crate::iter::NodeIterator;
 use html5ever::tree_builder::QuirksMode;
 use html5ever::QualName;
 use std::cell::{Cell, RefCell};
 use std::ops::Deref;
 use std::rc::Rc;
-
-use crate::attributes::{Attribute, Attributes, ExpandedName};
-use crate::cell_extras::*;
-use crate::iter::NodeIterator;
-
-use super::{Doctype, DocumentData, ElementData, Node, NodeData};
 
 /// A strong reference to a node.
 ///

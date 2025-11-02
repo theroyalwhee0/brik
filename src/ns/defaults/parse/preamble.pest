@@ -1,0 +1,32 @@
+// Pest grammar for minimal HTML parsing to locate and modify the <html> tag
+// Used for namespace injection before html5ever parsing
+
+document = { SOI ~ preamble ~ html_tag ~ rest }
+
+preamble = { (pi | doctype | comment | (!(pi | doctype | comment | html_tag) ~ ANY))* }
+
+pi = { "<?" ~ (!"?>" ~ ANY)* ~ "?>" }
+
+doctype = { "<!" ~ ^"DOCTYPE" ~ (!(">" | "[") ~ ANY)* ~ internal_subset? ~ ">" }
+
+internal_subset = { "[" ~ (!"]>" ~ ANY)* ~ "]>" }
+
+comment = { "<!--" ~ (!"-->" ~ ANY)* ~ "-->" }
+
+html_tag = { "<" ~ ^"html" ~ attributes ~ whitespace? ~ tag_close }
+
+attributes = { (whitespace ~ attribute)* ~ whitespace? }
+
+attribute = { attr_name ~ (whitespace? ~ "=" ~ whitespace? ~ attr_value?)? }
+
+attr_name = @{ (ASCII_ALPHA | "_" | ":") ~ (ASCII_ALPHANUMERIC | "_" | ":" | "-" | ".")* }
+
+attr_value = @{
+    ("\"" ~ (!"\"" ~ ANY)* ~ "\"") |
+    ("'" ~ (!"'" ~ ANY)* ~ "'") |
+    (!(whitespace | ">" | "/" | "=") ~ ANY)+
+}
+
+tag_close = { ">" | "/>" }
+whitespace = _{ WHITE_SPACE+ }
+rest = { ANY* }

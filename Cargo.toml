@@ -27,6 +27,10 @@ required-features = ["namespaces"]
 name = "template_processing"
 required-features = ["namespaces"]
 
+[[example]]
+name = "ns_defaults"
+required-features = ["namespaces"]
+
 [lints.rust]
 unsafe_code = "deny"
 missing_docs = "deny"
@@ -40,7 +44,7 @@ bare_urls = "deny"
 redundant_explicit_links = "deny"
 
 [lints.clippy]
-module_inception = "forbid"
+module_inception = "deny"
 print_stdout = "deny"
 print_stderr = "deny"
 disallowed_methods = "deny"
@@ -54,6 +58,10 @@ missing_safety_doc = "deny"
 tempfile = "3.23.0"
 
 [dependencies]
+# Data structures.
+indexmap = "2.12.0"
+precomputed-hash = "0.1.1"
+
 # HTML parsing.
 html5ever = "0.35.0"
 
@@ -61,21 +69,17 @@ html5ever = "0.35.0"
 cssparser = "0.35.0"
 selectors = "0.32.0"
 
-# Data structures.
-indexmap = "2.12.0"
-precomputed-hash = "0.1.1"
+# General parsing.
+pest = { version = "2.8.3", optional = true }
+pest_derive = { version = "2.8.3", optional = true }
 
 [features]
-default = []
+default = ["full"]
 full = ["namespaces"]
-# Unsafe code policy:
-# - Default mode: Uses unsafe code for performance
-# - Safe mode: Build with --features safe to eliminate all unsafe blocks
-# Note: This only affects brik's code, not its dependencies.
+
+# Safe Mode - No unsafe code in library.
+# This does not apply to dependencies.
 safe = []
 
-# Namespace support:
-# - Default mode: Namespace support is disabled
-# - Namespace mode: Build with --features namespaces to enable XML/SVG namespace support
-# Note: HTML-only users can disable this to reduce binary size.
-namespaces = []
+# Namespace support.
+namespaces = ["dep:pest", "dep:pest_derive"]

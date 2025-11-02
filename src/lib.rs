@@ -28,6 +28,9 @@ mod cell_extras;
 pub mod iter;
 /// Type-safe node data references.
 mod node_data_ref;
+/// Namespace specifics.
+#[cfg(feature = "namespaces")]
+pub mod ns;
 /// HTML parsing into the tree structure.
 mod parser;
 /// CSS selector matching implementation.
