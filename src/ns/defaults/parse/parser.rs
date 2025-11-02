@@ -1,7 +1,11 @@
 use super::preamble::{HtmlPreamble, Rule};
 use super::tag_info::HtmlTagInfo;
 use crate::ns::{NsError, NsResult};
+use pest::iterators::Pair;
 use pest::Parser;
+
+/// Type alias for xmlns attribute positions: ((prefix_start, prefix_end), (uri_start, uri_end)).
+type XmlnsPositions = ((usize, usize), (usize, usize));
 
 /// Parses the top of an HTML document to locate and analyze the `<html>` tag.
 ///
@@ -46,83 +50,43 @@ pub fn parse_preamble(html: impl AsRef<str>) -> NsResult<HtmlTagInfo> {
     let pairs = HtmlPreamble::parse(Rule::document, html)
         .map_err(|e| NsError::ParseError(format!("Failed to parse HTML: {e}")))?;
 
-    let mut existing_xmlns = Vec::new();
-    let mut tag_start = 0;
-    let mut tag_close_start = 0;
-    let mut tag_end = 0;
-
     // Walk the parse tree to find the html_tag and extract information.
     for pair in pairs {
         if pair.as_rule() == Rule::document {
             for inner in pair.into_inner() {
                 if inner.as_rule() == Rule::html_tag {
-                    tag_start = inner.as_span().start();
-                    tag_end = inner.as_span().end();
-
-                    // Process the html_tag's children.
-                    for tag_part in inner.into_inner() {
-                        match tag_part.as_rule() {
-                            Rule::attributes => {
-                                // Extract xmlns:* attributes with their positions.
-                                for attr in tag_part.into_inner() {
-                                    if attr.as_rule() == Rule::attribute {
-                                        let mut attr_name_span = None;
-                                        let mut attr_value_span = None;
-
-                                        for attr_part in attr.into_inner() {
-                                            match attr_part.as_rule() {
-                                                Rule::attr_name => {
-                                                    attr_name_span = Some(attr_part.as_span());
-                                                }
-                                                Rule::attr_value => {
-                                                    let span = attr_part.as_span();
-                                                    let value = span.as_str();
-                                                    // Calculate positions excluding quotes if present.
-                                                    let starts_with_quote = value.starts_with('"')
-                                                        || value.starts_with('\'');
-                                                    let ends_with_quote = value.ends_with('"')
-                                                        || value.ends_with('\'');
-                                                    let start_offset =
-                                                        if starts_with_quote { 1 } else { 0 };
-                                                    let end_offset =
-                                                        if ends_with_quote { 1 } else { 0 };
-
-                                                    attr_value_span = Some((
-                                                        span.start() + start_offset,
-                                                        span.end() - end_offset,
-                                                    ));
-                                                }
-                                                _ => {}
-                                            }
-                                        }
-
-                                        // If this is an xmlns:* attribute, store its positions.
-                                        if let (Some(name_span), Some(value_span)) =
-                                            (attr_name_span, attr_value_span)
-                                        {
-                                            let name = name_span.as_str();
-                                            if name.starts_with("xmlns:") {
-                                                let prefix_offset = "xmlns:".len();
-                                                let prefix_start =
-                                                    name_span.start() + prefix_offset;
-                                                let prefix_end = name_span.end();
-
-                                                existing_xmlns
-                                                    .push(((prefix_start, prefix_end), value_span));
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            Rule::tag_close => {
-                                // Mark where the tag close starts (position of `>` or `/>`).
-                                tag_close_start = tag_part.as_span().start();
-                            }
-                            _ => {}
-                        }
-                    }
+                    return extract_html_tag_info(inner);
                 }
             }
+        }
+    }
+
+    Err(NsError::ParseError(
+        "No <html> tag found in document".to_string(),
+    ))
+}
+
+/// Extracts tag information from an html_tag parse node.
+///
+/// Processes the html_tag's children to extract tag positions and xmlns attributes.
+#[inline]
+fn extract_html_tag_info(html_tag: Pair<Rule>) -> NsResult<HtmlTagInfo> {
+    let tag_start = html_tag.as_span().start();
+    let tag_end = html_tag.as_span().end();
+    let mut tag_close_start = 0;
+    let mut existing_xmlns = Vec::new();
+
+    // Process the html_tag's children.
+    for tag_part in html_tag.into_inner() {
+        match tag_part.as_rule() {
+            Rule::attributes => {
+                extract_xmlns_attributes(tag_part, &mut existing_xmlns);
+            }
+            Rule::tag_close => {
+                // Mark where the tag close starts (position of `>` or `/>`).
+                tag_close_start = tag_part.as_span().start();
+            }
+            _ => {}
         }
     }
 
@@ -132,6 +96,73 @@ pub fn parse_preamble(html: impl AsRef<str>) -> NsResult<HtmlTagInfo> {
         tag_end,
         existing_xmlns,
     })
+}
+
+/// Extracts xmlns:* attributes from an attributes parse node.
+///
+/// Processes all attributes and stores the positions of xmlns:* declarations.
+#[inline]
+fn extract_xmlns_attributes(attributes: Pair<Rule>, existing_xmlns: &mut Vec<XmlnsPositions>) {
+    for attr in attributes.into_inner() {
+        if attr.as_rule() == Rule::attribute {
+            if let Some(xmlns_positions) = extract_xmlns_from_attribute(attr) {
+                existing_xmlns.push(xmlns_positions);
+            }
+        }
+    }
+}
+
+/// Extracts xmlns namespace positions from a single attribute.
+///
+/// Returns positions for the prefix and URI if this is an xmlns:* attribute.
+#[inline]
+fn extract_xmlns_from_attribute(attr: Pair<Rule>) -> Option<XmlnsPositions> {
+    let mut attr_name_span = None;
+    let mut attr_value_span = None;
+
+    for attr_part in attr.into_inner() {
+        match attr_part.as_rule() {
+            Rule::attr_name => {
+                attr_name_span = Some(attr_part.as_span());
+            }
+            Rule::attr_value => {
+                attr_value_span = Some(extract_value_positions(attr_part));
+            }
+            _ => {}
+        }
+    }
+
+    // If this is an xmlns:* attribute, return its positions.
+    if let (Some(name_span), Some(value_span)) = (attr_name_span, attr_value_span) {
+        let name = name_span.as_str();
+        if name.starts_with("xmlns:") {
+            let prefix_offset = "xmlns:".len();
+            let prefix_start = name_span.start() + prefix_offset;
+            let prefix_end = name_span.end();
+
+            return Some(((prefix_start, prefix_end), value_span));
+        }
+    }
+
+    None
+}
+
+/// Extracts value positions from an attribute value, excluding quotes.
+///
+/// Calculates the start and end positions of the attribute value,
+/// removing surrounding quotes if present.
+#[inline]
+fn extract_value_positions(value_pair: Pair<Rule>) -> (usize, usize) {
+    let span = value_pair.as_span();
+    let value = span.as_str();
+
+    // Calculate positions excluding quotes if present.
+    let starts_with_quote = value.starts_with('"') || value.starts_with('\'');
+    let ends_with_quote = value.ends_with('"') || value.ends_with('\'');
+    let start_offset = if starts_with_quote { 1 } else { 0 };
+    let end_offset = if ends_with_quote { 1 } else { 0 };
+
+    (span.start() + start_offset, span.end() - end_offset)
 }
 
 #[cfg(test)]

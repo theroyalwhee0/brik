@@ -1,6 +1,6 @@
 /// NamespaceDefaults implementation.
-mod namespacedefaults;
+mod nsdefaults;
 /// HTML preamble parsing for namespace injection.
 pub mod parse;
 
-pub use namespacedefaults::NamespaceDefaults;
+pub use nsdefaults::NamespaceDefaults;
