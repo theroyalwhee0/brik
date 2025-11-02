@@ -28,6 +28,9 @@ mod cell_extras;
 pub mod iter;
 /// Type-safe node data references.
 mod node_data_ref;
+/// Namespace specifics.
+#[cfg(feature = "namespaces")]
+pub mod ns;
 /// HTML parsing into the tree structure.
 mod parser;
 /// CSS selector matching implementation.
@@ -36,9 +39,6 @@ mod select;
 mod serializer;
 /// DOM tree structure and manipulation.
 mod tree;
-/// Namespace specifics.
-#[cfg(feature = "namespaces")]
-pub mod ns;
 
 pub use attributes::{Attribute, Attributes, ExpandedName};
 pub use node_data_ref::NodeDataRef;

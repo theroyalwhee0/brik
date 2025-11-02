@@ -151,15 +151,16 @@ mod tests {
     /// to extract namespace prefixes and URIs.
     #[test]
     fn test_get_namespace_methods() {
-        let html = r#"<html xmlns:svg="http://www.w3.org/2000/svg" xmlns:custom="http://example.com">"#;
+        let html =
+            r#"<html xmlns:svg="http://www.w3.org/2000/svg" xmlns:custom="http://example.com">"#;
 
         let info = HtmlTagInfo {
             tag_start: 0,
             tag_close_start: html.len() - 1,
             tag_end: html.len(),
             existing_xmlns: vec![
-                ((12, 15), (17, 43)),  // svg -> http://www.w3.org/2000/svg
-                ((51, 57), (59, 77)),  // custom -> http://example.com
+                ((12, 15), (17, 43)), // svg -> http://www.w3.org/2000/svg
+                ((51, 57), (59, 77)), // custom -> http://example.com
             ],
         };
 

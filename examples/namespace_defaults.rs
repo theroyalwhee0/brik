@@ -12,7 +12,7 @@
 #[macro_use]
 extern crate html5ever;
 
-use brik::ns::NamespaceDefaults;
+use brik::ns::NsDefaultsBuilder;
 
 fn main() {
     println!("=== NamespaceDefaults Example ===\n");
@@ -38,22 +38,30 @@ fn main() {
     println!("Original HTML:");
     println!("{html}\n");
 
-    // Create a NamespaceDefaults provider and register the SVG namespace.
-    // The API supports method chaining for a fluent interface.
-    let ns_defaults = NamespaceDefaults::new()
+    // Create a NamespaceDefaultsBuilder and register the SVG namespace.
+    // The builder pattern separates configuration from the processed result.
+    let ns_defaults = NsDefaultsBuilder::new()
         .namespace("svg", ns!(svg))
         .namespace("custom", "http://example.com/custom-namespace")
-        .from_string(html)
-        .build();
+        .from_str(html);
 
     println!("Registered namespaces:");
     println!("  - svg: http://www.w3.org/2000/svg");
     println!("  - custom: http://example.com/custom-namespace\n");
 
-    // Once implemented, you would parse the modified HTML with:
-    // let document = parse_html().one(provider.into());
-    // NOTE: The .into() conversion is not yet implemented.
-    let _ = ns_defaults; // Silence unused variable warning for now.
+    println!("Processed HTML:");
+    println!("{}\n", ns_defaults.as_str());
+
+    // NsDefaults can be used in multiple ways:
+    // 1. As a &str reference (via AsRef<str>):
+    //    let document = parse_html().one(ns_defaults.as_ref());
+    //
+    // 2. Borrowed via .as_str():
+    //    let document = parse_html().one(ns_defaults.as_str());
+    //
+    // 3. Converted to String (consuming it via Into<String>):
+    //    let html_string: String = ns_defaults.into();
+    //    let document = parse_html().one(&html_string);
 
     println!("Expected result (when implemented):");
     println!("The <html> tag should be modified to include:");
