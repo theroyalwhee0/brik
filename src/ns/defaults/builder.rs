@@ -231,4 +231,38 @@ mod tests {
         let svg_count = result.matches("xmlns:svg").count();
         assert_eq!(svg_count, 1);
     }
+
+    /// Tests that Default trait creates an empty builder.
+    ///
+    /// Verifies that NsDefaultsBuilder::default() produces the same result
+    /// as NsDefaultsBuilder::new().
+    #[test]
+    fn test_default_implementation() {
+        let default_builder = NsDefaultsBuilder::default();
+        let new_builder = NsDefaultsBuilder::new();
+
+        // Both should produce identical results.
+        let html = "<html><body>Test</body></html>";
+
+        let ns1 = default_builder.from_string(html).expect("Failed to parse");
+        let ns2 = new_builder.from_string(html).expect("Failed to parse");
+
+        assert_eq!(ns1.to_string(), ns2.to_string());
+    }
+
+    /// Tests that empty builder produces no modifications.
+    ///
+    /// Verifies that a builder with no registered namespaces returns
+    /// the original HTML unchanged.
+    #[test]
+    fn test_empty_builder_no_modifications() {
+        let html = r#"<html lang="en"><body>Test</body></html>"#;
+
+        let ns_defaults = NsDefaultsBuilder::new()
+            .from_string(html)
+            .expect("Failed to parse HTML");
+
+        let result = ns_defaults.to_string();
+        assert_eq!(result, html);
+    }
 }

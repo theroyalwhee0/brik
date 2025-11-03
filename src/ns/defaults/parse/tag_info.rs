@@ -208,4 +208,119 @@ mod tests {
         assert!(info.get_uri(2, html).is_err());
         assert!(info.get_namespace(2, html).is_err());
     }
+
+    /// Tests error handling for invalid slice positions in get_prefix.
+    ///
+    /// Verifies that get_prefix returns InvalidSlice error when the stored
+    /// positions are beyond the HTML string bounds.
+    #[test]
+    fn test_get_prefix_invalid_position() {
+        let html = "<html>";
+
+        // Create HtmlTagInfo with invalid positions beyond string length.
+        let info = HtmlTagInfo {
+            tag_start: 0,
+            tag_close_start: 5,
+            tag_end: 6,
+            existing_xmlns: vec![
+                ((10, 15), (20, 30)), // Positions beyond html.len()
+            ],
+        };
+
+        let result = info.get_prefix(0, html);
+        assert!(result.is_err());
+
+        match result {
+            Err(NsError::InvalidSlice(msg)) => {
+                assert!(msg.contains("Invalid prefix position"));
+            }
+            _ => panic!("Expected InvalidSlice error"),
+        }
+    }
+
+    /// Tests error handling for invalid slice positions in get_uri.
+    ///
+    /// Verifies that get_uri returns InvalidSlice error when the stored
+    /// positions are beyond the HTML string bounds.
+    #[test]
+    fn test_get_uri_invalid_position() {
+        let html = "<html>";
+
+        // Create HtmlTagInfo with invalid URI positions.
+        let info = HtmlTagInfo {
+            tag_start: 0,
+            tag_close_start: 5,
+            tag_end: 6,
+            existing_xmlns: vec![
+                ((1, 2), (100, 200)), // URI positions beyond html.len()
+            ],
+        };
+
+        let result = info.get_uri(0, html);
+        assert!(result.is_err());
+
+        match result {
+            Err(NsError::InvalidSlice(msg)) => {
+                assert!(msg.contains("Invalid URI position"));
+            }
+            _ => panic!("Expected InvalidSlice error"),
+        }
+    }
+
+    /// Tests error handling for get_namespace with invalid positions.
+    ///
+    /// Verifies that get_namespace propagates errors from get_prefix
+    /// when positions are invalid.
+    #[test]
+    fn test_get_namespace_invalid_position() {
+        let html = "<html>";
+
+        let info = HtmlTagInfo {
+            tag_start: 0,
+            tag_close_start: 5,
+            tag_end: 6,
+            existing_xmlns: vec![
+                ((50, 60), (70, 80)), // All positions invalid.
+            ],
+        };
+
+        let result = info.get_namespace(0, html);
+        assert!(result.is_err());
+
+        // Should fail at get_prefix step.
+        match result {
+            Err(NsError::InvalidSlice(_)) => {}
+            _ => panic!("Expected InvalidSlice error"),
+        }
+    }
+
+    /// Tests xmlns_count with empty vector.
+    ///
+    /// Verifies that xmlns_count correctly returns 0 for empty xmlns list.
+    #[test]
+    fn test_xmlns_count_empty() {
+        let info = HtmlTagInfo {
+            tag_start: 0,
+            tag_close_start: 5,
+            tag_end: 6,
+            existing_xmlns: vec![],
+        };
+
+        assert_eq!(info.xmlns_count(), 0);
+    }
+
+    /// Tests xmlns_count with multiple entries.
+    ///
+    /// Verifies that xmlns_count correctly returns the number of xmlns attributes.
+    #[test]
+    fn test_xmlns_count_multiple() {
+        let info = HtmlTagInfo {
+            tag_start: 0,
+            tag_close_start: 5,
+            tag_end: 6,
+            existing_xmlns: vec![((1, 2), (3, 4)), ((5, 6), (7, 8)), ((9, 10), (11, 12))],
+        };
+
+        assert_eq!(info.xmlns_count(), 3);
+    }
 }

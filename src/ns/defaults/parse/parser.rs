@@ -261,4 +261,74 @@ mod tests {
         let result = parse_preamble(html);
         assert!(result.is_ok());
     }
+
+    /// Tests parsing HTML with multiple xmlns attributes.
+    ///
+    /// Verifies that the parser correctly handles multiple xmlns
+    /// declarations and stores their positions correctly.
+    #[test]
+    fn parse_multiple_xmlns() {
+        let html = r#"<html xmlns:svg="http://www.w3.org/2000/svg" xmlns:math="http://www.w3.org/1998/Math/MathML">
+<body>Hello</body>
+</html>"#;
+
+        let result = parse_preamble(html);
+        assert!(result.is_ok());
+
+        let info = result.unwrap();
+        assert_eq!(info.xmlns_count(), 2);
+
+        let prefix1 = info.get_prefix(0, html).unwrap();
+        let uri1 = info.get_uri(0, html).unwrap();
+        assert_eq!(prefix1, "svg");
+        assert_eq!(uri1, "http://www.w3.org/2000/svg");
+
+        let prefix2 = info.get_prefix(1, html).unwrap();
+        let uri2 = info.get_uri(1, html).unwrap();
+        assert_eq!(prefix2, "math");
+        assert_eq!(uri2, "http://www.w3.org/1998/Math/MathML");
+    }
+
+    /// Tests parsing HTML with single-quoted attribute values.
+    ///
+    /// Verifies that the parser correctly handles single quotes
+    /// and strips them from the value positions.
+    #[test]
+    fn parse_single_quoted_attribute() {
+        let html = r#"<html xmlns:custom='http://example.com/single' lang='en'>
+<body>Hello</body>
+</html>"#;
+
+        let result = parse_preamble(html);
+        assert!(result.is_ok());
+
+        let info = result.unwrap();
+        assert_eq!(info.xmlns_count(), 1);
+
+        let uri = info.get_uri(0, html).unwrap();
+        assert_eq!(uri, "http://example.com/single");
+        // Ensure quotes were stripped.
+        assert!(!uri.contains('\''));
+    }
+
+    /// Tests parsing malformed HTML that fails Pest grammar.
+    ///
+    /// Verifies that genuinely malformed HTML returns ParseError.
+    #[test]
+    fn parse_malformed_html_tag() {
+        let html = r#"<!DOCTYPE html>
+<html xmlns:broken="unclosed
+<body>Hello</body>
+</html>"#;
+
+        let result = parse_preamble(html);
+        assert!(result.is_err());
+
+        match result {
+            Err(NsError::ParseError(msg)) => {
+                assert!(msg.contains("Failed to parse HTML"));
+            }
+            _ => panic!("Expected ParseError"),
+        }
+    }
 }

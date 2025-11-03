@@ -293,4 +293,174 @@ mod tests {
         }
         assert_eq!(&*texts[0].borrow(), "Content doesn't contain ");
     }
+
+    /// Tests double-ended iteration for Elements iterator.
+    ///
+    /// Verifies that Elements supports both next() and next_back()
+    /// for bidirectional iteration over element nodes.
+    #[test]
+    fn elements_double_ended() {
+        let html = "<div><p>1</p><span>2</span><b>3</b><i>4</i></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select_first("div").unwrap();
+
+        let mut elements = div.as_node().descendants().elements();
+
+        // Forward from start.
+        let first = elements.next().unwrap();
+        assert_eq!(first.name.local.as_ref(), "p");
+
+        // Backward from end.
+        let last = elements.next_back().unwrap();
+        assert_eq!(last.name.local.as_ref(), "i");
+
+        // Continue from both ends.
+        let second = elements.next().unwrap();
+        assert_eq!(second.name.local.as_ref(), "span");
+
+        let second_last = elements.next_back().unwrap();
+        assert_eq!(second_last.name.local.as_ref(), "b");
+
+        // Should be exhausted.
+        assert!(elements.next().is_none());
+    }
+
+    /// Tests double-ended iteration for Comments iterator.
+    ///
+    /// Verifies that Comments supports both next() and next_back()
+    /// for bidirectional iteration over comment nodes.
+    #[test]
+    fn comments_double_ended() {
+        let html = "<div><!-- first --><p>text</p><!-- second --><!-- third --></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select_first("div").unwrap();
+
+        let mut comments = div.as_node().descendants().comments();
+
+        // Forward from start.
+        let first = comments.next().unwrap();
+        assert_eq!(&*first.borrow(), " first ");
+
+        // Backward from end.
+        let last = comments.next_back().unwrap();
+        assert_eq!(&*last.borrow(), " third ");
+
+        // Middle comment.
+        let middle = comments.next().unwrap();
+        assert_eq!(&*middle.borrow(), " second ");
+
+        // Should be exhausted.
+        assert!(comments.next().is_none());
+    }
+
+    /// Tests double-ended iteration for Descendants iterator.
+    ///
+    /// Verifies that descendants can be iterated both forward and backward,
+    /// respecting depth-first traversal order in both directions.
+    #[test]
+    fn descendants_double_ended() {
+        let html = "<div><p>1</p><span>2</span><b>3</b></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select_first("div").unwrap();
+
+        let mut descendants = div.as_node().descendants();
+
+        // Forward - first descendant.
+        let first = descendants.next().unwrap();
+        assert_eq!(first.as_element().unwrap().name.local.as_ref(), "p");
+
+        // Backward - last descendant (text node "3").
+        let last = descendants.next_back().unwrap();
+        assert!(last.as_text().is_some());
+
+        // Forward - second element.
+        let second = descendants.next().unwrap();
+        assert!(second.as_text().is_some()); // text "1"
+    }
+
+    /// Tests double-ended iteration for Siblings iterator.
+    ///
+    /// Verifies that siblings can be iterated both forward and backward
+    /// within the same parent's children.
+    #[test]
+    fn siblings_double_ended() {
+        let html = "<div><p>1</p><span>2</span><b>3</b><i>4</i></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select_first("div").unwrap();
+
+        let mut siblings = div.as_node().children();
+
+        // Forward from start.
+        let first = siblings.next().unwrap();
+        assert_eq!(first.as_element().unwrap().name.local.as_ref(), "p");
+
+        // Backward from end.
+        let last = siblings.next_back().unwrap();
+        assert_eq!(last.as_element().unwrap().name.local.as_ref(), "i");
+
+        // Continue from both ends.
+        let second = siblings.next().unwrap();
+        assert_eq!(second.as_element().unwrap().name.local.as_ref(), "span");
+
+        let second_last = siblings.next_back().unwrap();
+        assert_eq!(second_last.as_element().unwrap().name.local.as_ref(), "b");
+
+        // Should be exhausted.
+        assert!(siblings.next().is_none());
+    }
+
+    /// Tests double-ended iteration for Traverse iterator.
+    ///
+    /// Verifies that tree traversal edges can be iterated both forward
+    /// and backward, yielding Start and End edges appropriately.
+    #[test]
+    fn traverse_double_ended() {
+        let html = "<div><p>text</p></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select_first("div").unwrap();
+
+        let mut traverse = div.as_node().traverse();
+
+        // Forward - first edge should be Start(p).
+        let first = traverse.next().unwrap();
+        if let crate::iter::NodeEdge::Start(node) = first {
+            assert_eq!(node.as_element().unwrap().name.local.as_ref(), "p");
+        } else {
+            panic!("Expected Start edge");
+        }
+
+        // Backward - last edge should be End(text).
+        let last = traverse.next_back().unwrap();
+        assert!(matches!(last, crate::iter::NodeEdge::End(_)));
+    }
+
+    /// Tests NodeEdge enum variants and traits.
+    ///
+    /// Verifies that NodeEdge correctly represents Start and End edges,
+    /// and that Debug, Clone, PartialEq implementations work as expected.
+    #[test]
+    fn node_edge_basics() {
+        use crate::iter::NodeEdge;
+
+        let html = "<div></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select_first("div").unwrap();
+
+        let start = NodeEdge::Start(div.as_node().clone());
+        let end = NodeEdge::End(div.as_node().clone());
+
+        // Test Clone.
+        let start_clone = start.clone();
+        assert_eq!(start, start_clone);
+
+        // Test PartialEq - same variants with same node should be equal.
+        assert_eq!(start, start_clone);
+
+        // Test PartialEq - different variants should not be equal.
+        assert_ne!(start, end);
+
+        // Test Debug (just verify it doesn't panic).
+        let debug_str = format!("{start:?}");
+        assert!(debug_str.contains("Start"));
+    }
 }

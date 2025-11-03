@@ -182,4 +182,47 @@ mod tests {
             "<p class=\"foo\">Foo\n    \n</p>"
         );
     }
+
+    /// Tests serialization of HTML comments.
+    ///
+    /// Verifies that Comment nodes are properly serialized using the
+    /// standard HTML comment syntax.
+    #[test]
+    fn serialize_comment() {
+        let html = r"<div><!-- This is a comment --></div>";
+        let document = parse_html().one(html);
+        let output = document.to_string();
+        assert!(output.contains("<!-- This is a comment -->"));
+    }
+
+    /// Tests serialization preserves multiple node types.
+    ///
+    /// Verifies that documents with mixed content (text, elements, comments)
+    /// are properly serialized.
+    #[test]
+    fn serialize_mixed_content() {
+        let html = r"<div>Text<!-- comment --><span>more</span></div>";
+        let document = parse_html().one(html);
+        let output = document.to_string();
+        assert!(output.contains("Text"));
+        assert!(output.contains("<!-- comment -->"));
+        assert!(output.contains("<span>"));
+    }
+
+    /// Tests direct serialization to a writer.
+    ///
+    /// Verifies that serialize() method correctly writes HTML to an arbitrary
+    /// writer, not just via Display or file operations.
+    #[test]
+    fn serialize_to_writer() {
+        let html = r"<p>Hello</p>";
+        let document = parse_html().one(html);
+        let p = document.select_first("p").unwrap();
+
+        let mut buffer = Vec::new();
+        p.as_node().serialize(&mut buffer).unwrap();
+        let output = String::from_utf8(buffer).unwrap();
+
+        assert_eq!(output, "<p>Hello</p>");
+    }
 }
