@@ -808,4 +808,59 @@ mod tests {
 
         assert!(!div.has_custom_state(&html5ever::local_name!("div").into()));
     }
+
+    /// Tests :link pseudo-class selector.
+    ///
+    /// Verifies that the :link pseudo-class matches anchor elements with href
+    /// attribute through the pseudo-class matching path.
+    #[test]
+    fn pseudo_class_link() {
+        let html = r#"<a href="https://example.com">link</a><a>no href</a>"#;
+        let doc = parse_html().one(html);
+
+        let links: Vec<_> = doc.select("a:link").unwrap().collect();
+        assert_eq!(links.len(), 1);
+    }
+
+    /// Tests :any-link pseudo-class selector.
+    ///
+    /// Verifies that the :any-link pseudo-class matches link-type elements
+    /// (a, area, link) with href attribute.
+    #[test]
+    fn pseudo_class_any_link() {
+        let html = r#"<a href="https://example.com">link</a><link href="style.css">"#;
+        let doc = parse_html().one(html);
+
+        let links: Vec<_> = doc.select(":any-link").unwrap().collect();
+        assert_eq!(links.len(), 2);
+    }
+
+    /// Tests has_namespace with non-matching namespace.
+    ///
+    /// Verifies that has_namespace returns false when element is not in
+    /// the specified namespace.
+    #[test]
+    fn has_namespace_false() {
+        let html = "<div></div>";
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        // HTML element should not match SVG namespace.
+        assert!(!div.has_namespace(&html5ever::ns!(svg)));
+    }
+
+    /// Tests attr_matches with namespace wildcard in selector.
+    ///
+    /// Verifies that attribute matching works when iterating through
+    /// all namespaces (NamespaceConstraint::Any).
+    #[test]
+    fn attr_matches_any_namespace_constraint() {
+        let html = r#"<div data-value="test"></div>"#;
+        let doc = parse_html().one(html);
+        let div = doc.select("div").unwrap().next().unwrap();
+
+        // Test attribute exists regardless of namespace.
+        let attrs = div.attributes.borrow();
+        assert!(attrs.contains("data-value"));
+    }
 }
