@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2025-11-08
+
+### Added
+
+- Namespace provider with HTML preamble parsing (#49)
+  - Automatically detect and configure namespace prefixes from HTML documents
+  - Support for parsing namespace declarations in HTML preambles
+
+### Changed
+
+- Improved test coverage to ~95% (#51)
+  - Enhanced test suite with comprehensive coverage
+
 ## [0.9.1] - 2025-10-24
 
 ### Fixed
@@ -67,7 +80,8 @@ See [docs/historical-changelog.md](docs/historical-changelog.md) for details.
 **Historical Note**: This project was originally created by Simon Sapin as `kuchiki`,
 maintained by Brave Browser as `kuchikiki`, and is now maintained as `brik`.
 
-[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.9.1...HEAD
+[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.9.2...HEAD
+[0.9.2]: https://github.com/theroyalwhee0/brik/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/theroyalwhee0/brik/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/theroyalwhee0/brik/compare/v0.8.2...v0.9.0
 [0.8.2]: https://github.com/brave/kuchikiki/releases/tag/v0.8.2
