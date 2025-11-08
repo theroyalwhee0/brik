@@ -17,7 +17,7 @@ Add the `namespaces` feature to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-brik = { version = "0.8", features = ["namespaces"] }
+brik = { version = "0.9.2", features = ["namespaces"] }
 ```
 
 ## Core Concepts
