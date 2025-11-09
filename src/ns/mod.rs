@@ -34,10 +34,13 @@
 //! let doc = parse_html().from_iter(ns_defaults);
 //! ```
 
+/// Apply xmlns declarations to document elements and attributes.
+mod apply_xmlns;
 /// Default namespace configuration and injection.
 pub mod defaults;
 /// Error types for namespace operations.
 mod error;
 
+pub use apply_xmlns::{apply_xmlns, apply_xmlns_strict};
 pub use defaults::{NsDefaults, NsDefaultsBuilder};
 pub use error::{NsError, NsResult};

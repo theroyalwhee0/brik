@@ -246,6 +246,98 @@ impl NodeRef {
             parent.first_child.replace(Some(new_sibling.0));
         }
     }
+
+    /// Applies xmlns namespace declarations to elements and attributes (lenient).
+    ///
+    /// This function extracts xmlns declarations from the `<html>` element and applies
+    /// them to all prefixed elements and attributes in the document. Elements like
+    /// `c:my-element` are split into prefix (`c`), local name (`my-element`), and
+    /// namespace URI (from `xmlns:c` declaration).
+    ///
+    /// **Lenient mode**: If a prefix is used but not defined in xmlns declarations,
+    /// it is still split but assigned a null namespace. This will succeed and return
+    /// the document even with undefined prefixes.
+    ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
+    /// # Returns
+    ///
+    /// Returns the rebuilt document with namespace corrections applied.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for unexpected processing failures (not for undefined prefixes).
+    /// In practice, this should not happen during normal operation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    ///
+    /// let html = r#"<html xmlns:c="https://example.com/custom">
+    ///     <body><c:widget>Content</c:widget></body>
+    /// </html>"#;
+    ///
+    /// let doc = parse_html().one(html);
+    /// let corrected = doc.apply_xmlns().unwrap();
+    ///
+    /// // The c:widget element now has proper namespace information
+    /// let widget = corrected.select_first("widget").unwrap();
+    /// assert_eq!(widget.namespace_uri().as_ref(), "https://example.com/custom");
+    /// }
+    /// ```
+    #[cfg(feature = "namespaces")]
+    pub fn apply_xmlns(&self) -> crate::ns::NsResult<NodeRef> {
+        crate::ns::apply_xmlns(self)
+    }
+
+    /// Applies xmlns namespace declarations to elements and attributes (strict).
+    ///
+    /// This function works identically to [`apply_xmlns`](Self::apply_xmlns), but returns
+    /// an error if any prefixed element or attribute references an undefined namespace prefix.
+    ///
+    /// **Strict mode**: Returns an error if undefined prefixes are encountered, but
+    /// the error contains the rebuilt document with those prefixes assigned null namespaces.
+    ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
+    /// # Errors
+    ///
+    /// Returns `NsError::UndefinedPrefix` if any element or attribute uses a namespace
+    /// prefix that has no corresponding `xmlns:prefix` declaration. The error contains
+    /// the rebuilt document and a list of undefined prefixes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    /// use brik::ns::NsError;
+    ///
+    /// let html = r#"<html>
+    ///     <body><c:widget>Content</c:widget></body>
+    /// </html>"#;
+    ///
+    /// let doc = parse_html().one(html);
+    /// match doc.apply_xmlns_strict() {
+    ///     Ok(corrected) => println!("All namespaces defined"),
+    ///     Err(NsError::UndefinedPrefix(doc, prefixes)) => {
+    ///         println!("Undefined prefixes: {:?}", prefixes);
+    ///         // Can still use the document with null namespaces
+    ///     }
+    ///     Err(e) => panic!("Error: {}", e),
+    /// }
+    /// }
+    /// ```
+    #[cfg(feature = "namespaces")]
+    pub fn apply_xmlns_strict(&self) -> crate::ns::NsResult<NodeRef> {
+        crate::ns::apply_xmlns_strict(self)
+    }
 }
 
 #[cfg(test)]

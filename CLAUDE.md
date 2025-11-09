@@ -161,3 +161,5 @@ focus-issue 41
 - Address all clippy warnings
 - All documentation lints are enabled and enforced (see `[lints.rustdoc]` and `[lints.clippy]` in `Cargo.toml`)
 - Examples may use `#![allow(clippy::print_stdout)]` when appropriate
+- When an issue is empty please await further explanation.
+- Put temp files in .focus/ if it exists.
