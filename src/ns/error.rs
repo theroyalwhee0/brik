@@ -1,8 +1,9 @@
 /// Errors that can occur during namespace parsing operations.
 ///
-/// This enum distinguishes between two types of errors:
+/// This enum distinguishes between three types of errors:
 /// - Parsing errors occur when the HTML structure cannot be parsed
 /// - Slice errors occur when extracting positions from parsed HTML fails
+/// - Undefined prefix errors occur when applying namespaces to elements/attributes
 #[derive(Debug)]
 pub enum NsError {
     /// Failed to parse HTML structure.
@@ -33,6 +34,22 @@ pub enum NsError {
     /// NS Invalid slice: Invalid prefix position
     /// ```
     InvalidSlice(String),
+
+    /// Undefined namespace prefix.
+    ///
+    /// This error occurs when applying namespaces in strict mode and an element
+    /// or attribute uses a namespace prefix that has no corresponding xmlns
+    /// declaration in the document.
+    ///
+    /// Contains the rebuilt document (with undefined prefixes using null namespace)
+    /// and a list of undefined prefix strings found during processing.
+    ///
+    /// # Examples
+    ///
+    /// ```text
+    /// NS Undefined prefix: Found 2 undefined prefixes: 'c', 'foo'
+    /// ```
+    UndefinedPrefix(crate::NodeRef, Vec<String>),
 }
 
 /// Result type for namespace parsing operations.
@@ -50,6 +67,19 @@ impl std::fmt::Display for NsError {
         match self {
             NsError::ParseError(msg) => write!(f, "NS Parse error: {msg}"),
             NsError::InvalidSlice(msg) => write!(f, "NS Invalid slice: {msg}"),
+            NsError::UndefinedPrefix(_, prefixes) => {
+                write!(
+                    f,
+                    "NS Undefined prefix: Found {} undefined prefix{}: {}",
+                    prefixes.len(),
+                    if prefixes.len() == 1 { "" } else { "es" },
+                    prefixes
+                        .iter()
+                        .map(|p| format!("'{p}'"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            }
         }
     }
 }
@@ -81,6 +111,38 @@ mod tests {
         let error = NsError::InvalidSlice("Index out of bounds".to_string());
         let display = format!("{error}");
         assert_eq!(display, "NS Invalid slice: Index out of bounds");
+    }
+
+    /// Tests Display formatting for UndefinedPrefix variant.
+    ///
+    /// Verifies that UndefinedPrefix produces correctly formatted error messages.
+    #[test]
+    fn test_display_undefined_prefix() {
+        use crate::NodeRef;
+
+        let doc = NodeRef::new_document();
+        let error = NsError::UndefinedPrefix(doc, vec!["c".to_string(), "foo".to_string()]);
+        let display = format!("{error}");
+        assert_eq!(
+            display,
+            "NS Undefined prefix: Found 2 undefined prefixes: 'c', 'foo'"
+        );
+    }
+
+    /// Tests Display formatting for UndefinedPrefix with single prefix.
+    ///
+    /// Verifies correct singular/plural handling in error message.
+    #[test]
+    fn test_display_undefined_prefix_single() {
+        use crate::NodeRef;
+
+        let doc = NodeRef::new_document();
+        let error = NsError::UndefinedPrefix(doc, vec!["c".to_string()]);
+        let display = format!("{error}");
+        assert_eq!(
+            display,
+            "NS Undefined prefix: Found 1 undefined prefix: 'c'"
+        );
     }
 
     /// Tests that NsError implements std::error::Error trait.
