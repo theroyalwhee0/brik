@@ -6,6 +6,26 @@ use html5ever::{Attribute, QualName};
 use std::cell::RefCell;
 
 /// Parse an HTML fragment with html5ever and the default configuration.
+///
+/// Fragment parsing requires a context element (name and attributes) which
+/// affects how the HTML5 parser interprets the fragment content.
+///
+/// # Examples
+///
+/// ```
+/// use brik::parse_fragment;
+/// use brik::traits::*;
+///
+/// # #[macro_use] extern crate html5ever;
+/// # fn main() {
+/// let ctx_name = html5ever::QualName::new(None, ns!(html), local_name!("tbody"));
+/// let html = "<tr><td>Cell 1</td><td>Cell 2</td></tr>";
+/// let document = parse_fragment(ctx_name, vec![]).one(html);
+///
+/// let td = document.select_first("td").unwrap();
+/// assert_eq!(td.text_contents(), "Cell 1");
+/// # }
+/// ```
 pub fn parse_fragment(ctx_name: QualName, ctx_attr: Vec<Attribute>) -> html5ever::Parser<Sink> {
     parse_fragment_with_options(ParseOpts::default(), ctx_name, ctx_attr)
 }

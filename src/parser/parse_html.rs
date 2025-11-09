@@ -5,6 +5,22 @@ use crate::tree::NodeRef;
 use std::cell::RefCell;
 
 /// Parse an HTML document with html5ever and the default configuration.
+///
+/// Returns an html5ever Parser that can be used with TendrilSink methods
+/// to parse HTML from various sources.
+///
+/// # Examples
+///
+/// ```
+/// use brik::parse_html;
+/// use brik::traits::*;
+///
+/// let html = "<html><body><div>Hello, world!</div></body></html>";
+/// let document = parse_html().one(html);
+///
+/// let div = document.select_first("div").unwrap();
+/// assert_eq!(div.text_contents(), "Hello, world!");
+/// ```
 pub fn parse_html() -> html5ever::Parser<Sink> {
     parse_html_with_options(ParseOpts::default())
 }
