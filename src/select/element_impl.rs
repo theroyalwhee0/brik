@@ -76,7 +76,8 @@ impl selectors::Element for NodeDataRef<ElementData> {
     fn is_html_element_in_html_document(&self) -> bool {
         // An element is an HTML element if it's in the HTML namespace.
         // This library only parses HTML (via html5ever), not XML, so document-level
-        // type distinction is not needed. Elements in the HTML namespace are HTML elements.
+        // type distinction is not needed. Elements in other namespaces (SVG, MathML, etc.)
+        // are handled through the ns/ module's namespace support.
         self.name.ns == ns!(html)
     }
 
