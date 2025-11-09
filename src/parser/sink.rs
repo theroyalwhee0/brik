@@ -181,7 +181,9 @@ impl TreeSink for Sink {
 
     #[inline]
     fn mark_script_already_started(&self, _node: &NodeRef) {
-        // FIXME: Is this useful outside of a browser?
+        // No-op: Script execution tracking is only relevant in browser environments.
+        // Server-side HTML parsing and manipulation doesn't need to track whether
+        // scripts have been executed, so this TreeSink method is intentionally empty.
     }
 
     #[inline]
