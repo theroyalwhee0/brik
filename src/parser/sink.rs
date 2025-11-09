@@ -1,63 +1,12 @@
+//! TreeSink implementation for building DOM trees during HTML parsing.
+
 use crate::attributes;
 use crate::tree::NodeRef;
 use html5ever::tendril::StrTendril;
 use html5ever::tree_builder::{ElementFlags, NodeOrText, QuirksMode, TreeSink};
-use html5ever::{self, Attribute, ExpandedName, QualName};
+use html5ever::{Attribute, ExpandedName, QualName};
 use std::borrow::Cow;
 use std::cell::RefCell;
-
-/// Options for the HTML parser.
-#[derive(Default)]
-pub struct ParseOpts {
-    /// Options for the HTML tokenizer.
-    pub tokenizer: html5ever::tokenizer::TokenizerOpts,
-
-    /// Options for the HTML tree builder.
-    pub tree_builder: html5ever::tree_builder::TreeBuilderOpts,
-
-    /// A callback for HTML parse errors (which are never fatal).
-    pub on_parse_error: Option<Box<dyn FnMut(Cow<'static, str>)>>,
-}
-
-/// Parse an HTML document with html5ever and the default configuration.
-pub fn parse_html() -> html5ever::Parser<Sink> {
-    parse_html_with_options(ParseOpts::default())
-}
-
-/// Parse an HTML document with html5ever with custom configuration.
-pub fn parse_html_with_options(opts: ParseOpts) -> html5ever::Parser<Sink> {
-    let sink = Sink {
-        document_node: NodeRef::new_document(),
-        on_parse_error: RefCell::new(opts.on_parse_error),
-    };
-    let html5opts = html5ever::ParseOpts {
-        tokenizer: opts.tokenizer,
-        tree_builder: opts.tree_builder,
-    };
-    html5ever::parse_document(sink, html5opts)
-}
-
-/// Parse an HTML fragment with html5ever and the default configuration.
-pub fn parse_fragment(ctx_name: QualName, ctx_attr: Vec<Attribute>) -> html5ever::Parser<Sink> {
-    parse_fragment_with_options(ParseOpts::default(), ctx_name, ctx_attr)
-}
-
-/// Parse an HTML fragment with html5ever with custom configuration.
-pub fn parse_fragment_with_options(
-    opts: ParseOpts,
-    ctx_name: QualName,
-    ctx_attr: Vec<Attribute>,
-) -> html5ever::Parser<Sink> {
-    let sink = Sink {
-        document_node: NodeRef::new_document(),
-        on_parse_error: RefCell::new(opts.on_parse_error),
-    };
-    let html5opts = html5ever::ParseOpts {
-        tokenizer: opts.tokenizer,
-        tree_builder: opts.tree_builder,
-    };
-    html5ever::parse_fragment(sink, html5opts, ctx_name, ctx_attr, false)
-}
 
 /// Type alias for the parse error callback handler.
 type ParseErrorHandler = RefCell<Option<Box<dyn FnMut(Cow<'static, str>)>>>;
@@ -65,9 +14,9 @@ type ParseErrorHandler = RefCell<Option<Box<dyn FnMut(Cow<'static, str>)>>>;
 /// Receives new tree nodes during parsing.
 pub struct Sink {
     /// The root document node being constructed.
-    document_node: NodeRef,
+    pub(super) document_node: NodeRef,
     /// Optional callback for handling parse errors.
-    on_parse_error: ParseErrorHandler,
+    pub(super) on_parse_error: ParseErrorHandler,
 }
 
 /// Implements TreeSink for Sink.
@@ -256,100 +205,5 @@ impl TreeSink for Sink {
         } else {
             self.append(prev_element, child)
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::traits::*;
-    use html5ever::tree_builder::QuirksMode;
-    use html5ever::QualName;
-    use std::path::Path;
-
-    /// Tests parsing HTML and serializing back to a string.
-    ///
-    /// Verifies that the parser correctly constructs a DOM tree from HTML input,
-    /// detects quirks mode, and can serialize the result back to normalized HTML.
-    #[test]
-    fn parse_and_serialize() {
-        let html = r"
-<!doctype html>
-<title>Test case</title>
-<p>Content";
-        let document = parse_html().one(html);
-        assert_eq!(
-            document.as_document().unwrap().quirks_mode(),
-            QuirksMode::NoQuirks
-        );
-        assert_eq!(
-            document.to_string(),
-            r"<!DOCTYPE html><html><head><title>Test case</title>
-</head><body><p>Content</p></body></html>"
-        );
-    }
-
-    /// Tests parsing HTML with template elements.
-    ///
-    /// Verifies that the parser correctly handles HTML template elements,
-    /// which have special parsing rules and maintain separate content trees.
-    #[test]
-    fn parse_and_serialize_with_template() {
-        let html = r"
-<!doctype html>
-<title>Test case</title>
-<template><p>Content</p></template>";
-        let document = parse_html().one(html);
-        assert_eq!(
-            document.as_document().unwrap().quirks_mode(),
-            QuirksMode::NoQuirks
-        );
-        assert_eq!(
-            document.to_string(),
-            r"<!DOCTYPE html><html><head><title>Test case</title>
-<template><p>Content</p></template></head><body></body></html>"
-        );
-    }
-
-    /// Tests parsing an HTML fragment with a specific context.
-    ///
-    /// Verifies that fragment parsing respects the context element, which
-    /// affects how the HTML5 parser interprets the fragment content.
-    #[test]
-    fn parse_and_serialize_fragment() {
-        let html = r"<tbody><tr><td>Test case";
-
-        let ctx_name = QualName::new(None, ns!(html), local_name!("tbody"));
-        let document = parse_fragment(ctx_name, vec![]).one(html);
-        assert_eq!(
-            document.as_document().unwrap().quirks_mode(),
-            QuirksMode::NoQuirks
-        );
-        assert_eq!(
-            document.to_string(),
-            r"<html><tr><td>Test case</td></tr></html>"
-        );
-    }
-
-    /// Tests parsing HTML from a file.
-    ///
-    /// Verifies that the parser can read and parse HTML content from
-    /// a file path, producing the expected DOM structure.
-    #[test]
-    fn parse_file() {
-        let mut path = Path::new(env!("CARGO_MANIFEST_DIR")).to_path_buf();
-        path.push("test_data");
-        path.push("foo.html");
-
-        let html = r"<!DOCTYPE html><html><head>
-        <title>Test case</title>
-    </head>
-    <body>
-        <p>Foo</p>
-    
-
-</body></html>";
-        let document = parse_html().from_utf8().from_file(&path).unwrap();
-        assert_eq!(document.to_string(), html);
     }
 }
