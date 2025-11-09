@@ -32,7 +32,7 @@ mod node_data_ref;
 #[cfg(feature = "namespaces")]
 pub mod ns;
 /// HTML parsing into the tree structure.
-mod parser;
+pub mod parser;
 /// CSS selector matching implementation.
 mod select;
 /// HTML serialization from the tree structure.
@@ -42,7 +42,10 @@ mod tree;
 
 pub use attributes::{Attribute, Attributes, ExpandedName};
 pub use node_data_ref::NodeDataRef;
-pub use parser::{parse_fragment, parse_html, parse_html_with_options, ParseOpts, Sink};
+pub use parser::{
+    parse_fragment, parse_fragment_with_options, parse_html, parse_html_with_options, ParseOpts,
+    Sink,
+};
 pub use select::{Selector, SelectorContext, Selectors, Specificity};
 pub use tree::{Doctype, DocumentData, ElementData, Node, NodeData, NodeRef};
 

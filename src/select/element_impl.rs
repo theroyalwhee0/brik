@@ -74,7 +74,12 @@ impl selectors::Element for NodeDataRef<ElementData> {
 
     #[inline]
     fn is_html_element_in_html_document(&self) -> bool {
-        // FIXME: Have a notion of HTML document v.s. XML document?
+        // An element is an HTML element if and only if it's in the HTML namespace.
+        // This includes:
+        // - Standard HTML elements like <div>, <p>, etc.
+        // - Prefixed elements that resolve to the HTML namespace (unusual but valid)
+        // Elements in other namespaces (SVG, MathML, custom) are not HTML elements,
+        // even when embedded in an HTML document.
         self.name.ns == ns!(html)
     }
 
