@@ -31,6 +31,10 @@ required-features = ["namespaces"]
 name = "ns_defaults"
 required-features = ["namespaces"]
 
+[[example]]
+name = "apply_xmlns"
+required-features = ["namespaces"]
+
 [lints.rust]
 unsafe_code = "deny"
 missing_docs = "deny"
@@ -74,7 +78,7 @@ pest = { version = "2.8.3", optional = true }
 pest_derive = { version = "2.8.3", optional = true }
 
 [features]
-default = ["full"]
+default = []
 full = ["namespaces"]
 
 # Safe Mode - No unsafe code in library.
