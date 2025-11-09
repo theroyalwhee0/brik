@@ -172,8 +172,6 @@ impl TreeSink for Sink {
 
     #[inline]
     fn reparent_children(&self, node: &NodeRef, new_parent: &NodeRef) {
-        // FIXME: Can this be done more effciently in rctree,
-        // by moving the whole linked list of children at once?
         for child in node.children() {
             new_parent.append(child)
         }
