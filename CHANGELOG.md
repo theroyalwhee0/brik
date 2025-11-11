@@ -11,6 +11,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2025-11-11
+
+### Added
+
+- `apply_xmlns()` function for post-processing namespace prefixes (#57)
+  - Extracts xmlns declarations from HTML and applies them to prefixed elements
+  - Both lenient (default) and strict modes for handling undefined prefixes
+  - Support for template contents, attributes, and all node types
+  - Comprehensive example demonstrating functionality
+- `apply_xmlns_opts()` with flexible `NsOptions` configuration (#59)
+  - Provide additional namespace mappings via options
+  - Configurable strict mode for undefined prefix handling
+  - HTML declarations take precedence over provided options
+- New example `apply_xmlns.rs` demonstrating namespace processing
+
+### Changed
+
+- Refactored `parser.rs` into modular directory structure (#59)
+  - Each component in dedicated file following one-item-per-file convention
+  - Improved code organization and git history tracking
+- Improved test coverage from 95.85% to 97.86% (#59)
+  - Added 10 new tests for TreeSink edge cases
+  - Comprehensive coverage of parser implementation
+
+### Deprecated
+
+- `apply_xmlns_strict()` deprecated in favor of `apply_xmlns_opts()` with `NsOptions` (#59)
+- `NsDefaultsBuilder` module deprecated in favor of `apply_xmlns_opts()` (#59)
+
 ## [0.9.2] - 2025-11-08
 
 ### Added
@@ -80,7 +109,8 @@ See [docs/historical-changelog.md](docs/historical-changelog.md) for details.
 **Historical Note**: This project was originally created by Simon Sapin as `kuchiki`,
 maintained by Brave Browser as `kuchikiki`, and is now maintained as `brik`.
 
-[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.9.2...HEAD
+[unreleased]: https://github.com/theroyalwhee0/brik/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/theroyalwhee0/brik/compare/v0.9.2...v0.10.0
 [0.9.2]: https://github.com/theroyalwhee0/brik/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/theroyalwhee0/brik/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/theroyalwhee0/brik/compare/v0.8.2...v0.9.0
