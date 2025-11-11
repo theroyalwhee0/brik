@@ -1,46 +1,66 @@
 //! Namespace handling for HTML documents.
 //!
-//! This module provides tools for injecting missing namespace declarations into HTML
-//! documents, particularly useful when working with prefixed elements (like `svg:rect`)
-//! that require namespace declarations on the root `<html>` element.
+//! This module provides tools for processing namespace declarations in HTML documents,
+//! particularly useful when working with prefixed elements (like `svg:rect`, `c:widget`)
+//! that use namespace prefixes.
 //!
-//! # Architecture
+//! # Overview
 //!
-//! The module uses a **slice-based design** for efficient integration with html5ever:
-//!
-//! 1. **Parse**: HTML is parsed to locate the `<html>` tag insertion point
-//! 2. **Store**: Original HTML and insertion position are stored (no copying)
-//! 3. **Output**: When consumed, yields string slices that can be:
-//!    - Concatenated into a single String (`Into<String>`)
-//!    - Converted to a StrTendril (`From<NsDefaults>`)
-//!    - Iterated as slices (`IntoIterator`) for zero-copy html5ever parsing
-//!
-//! This design avoids unnecessary string allocation until the result is actually needed.
+//! Since HTML5 parsers don't process namespace prefixes, elements like `<svg:rect>` are
+//! parsed as literal tag names. This module provides post-processing functions to split
+//! prefixed names and apply namespace URIs based on `xmlns:*` declarations.
 //!
 //! # Example
 //!
-//! ```ignore
-//! use brik::ns::NsDefaultsBuilder;
+//! ```
+//! #[cfg(feature = "namespaces")]
+//! {
+//! use brik::ns::{NsOptions, NsError};
 //! use brik::parse_html;
+//! use brik::traits::*;
+//! use html5ever::ns;
+//! use std::collections::HashMap;
 //!
-//! let html = r#"<html><body><svg:rect /></body></html>"#;
+//! let html = r#"<html xmlns:c="https://example.com/custom">
+//!     <body><svg:rect /><c:widget>Content</c:widget></body>
+//! </html>"#;
 //!
-//! // Inject missing namespace declaration
-//! let ns_defaults = NsDefaultsBuilder::new()
-//!     .namespace("svg", "http://www.w3.org/2000/svg")
-//!     .from_string(html)?;
+//! let doc = parse_html().one(html);
 //!
-//! // Use with html5ever (zero-copy via IntoIterator)
-//! let doc = parse_html().from_iter(ns_defaults);
+//! // Provide additional namespaces via options
+//! let mut namespaces = HashMap::new();
+//! namespaces.insert("svg".to_string(), ns!(svg));
+//!
+//! let options = NsOptions {
+//!     namespaces,
+//!     strict: false,
+//! };
+//!
+//! // Apply namespace processing
+//! let corrected = doc.apply_xmlns_opts(&options).unwrap();
+//!
+//! // Now prefixes are properly split and namespaced
+//! let widget = corrected.select_first("widget").unwrap();
+//! assert_eq!(widget.prefix().unwrap().as_ref(), "c");
+//! assert_eq!(widget.namespace_uri().as_ref(), "https://example.com/custom");
+//! }
 //! ```
 
 /// Apply xmlns declarations to document elements and attributes.
 mod apply_xmlns;
 /// Default namespace configuration and injection.
+///
+/// **DEPRECATED**: This module is deprecated. Use [`apply_xmlns_opts`] with [`NsOptions`] instead.
+#[deprecated(
+    since = "0.9.2",
+    note = "Use `apply_xmlns_opts` with `NsOptions` instead of NsDefaultsBuilder"
+)]
 pub mod defaults;
 /// Error types for namespace operations.
 mod error;
 
-pub use apply_xmlns::{apply_xmlns, apply_xmlns_strict};
+#[allow(deprecated)]
+pub use apply_xmlns::{apply_xmlns, apply_xmlns_opts, apply_xmlns_strict, NsOptions};
+#[allow(deprecated)]
 pub use defaults::{NsDefaults, NsDefaultsBuilder};
 pub use error::{NsError, NsResult};

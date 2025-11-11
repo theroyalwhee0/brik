@@ -294,15 +294,71 @@ impl NodeRef {
         crate::ns::apply_xmlns(self)
     }
 
+    /// Applies xmlns namespace declarations to elements and attributes with options.
+    ///
+    /// This function extracts xmlns declarations from the `<html>` element, merges them
+    /// with any additional namespaces provided in `options`, and applies them to all
+    /// prefixed elements and attributes in the document.
+    ///
+    /// **Note:** This method requires the `namespaces` feature to be enabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `options` - Configuration options including additional namespaces and strict mode
+    ///
+    /// # Errors
+    ///
+    /// If `options.strict` is `true`, returns `NsError::UndefinedPrefix` if any element
+    /// or attribute uses a namespace prefix that has no corresponding declaration.
+    /// The error contains the rebuilt document and a list of undefined prefixes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// #[cfg(feature = "namespaces")]
+    /// {
+    /// use brik::parse_html;
+    /// use brik::traits::*;
+    /// use brik::ns::{NsOptions, NsError};
+    /// use html5ever::ns;
+    /// use std::collections::HashMap;
+    ///
+    /// let html = r#"<html>
+    ///     <body><svg:rect /><c:widget>Content</c:widget></body>
+    /// </html>"#;
+    ///
+    /// let doc = parse_html().one(html);
+    ///
+    /// // Provide additional namespaces via options
+    /// let mut namespaces = HashMap::new();
+    /// namespaces.insert("svg".to_string(), ns!(svg));
+    ///
+    /// let options = NsOptions {
+    ///     namespaces,
+    ///     strict: true,
+    /// };
+    ///
+    /// match doc.apply_xmlns_opts(&options) {
+    ///     Ok(corrected) => println!("svg namespace provided, but c is undefined"),
+    ///     Err(NsError::UndefinedPrefix(doc, prefixes)) => {
+    ///         println!("Undefined prefixes: {:?}", prefixes); // ["c"]
+    ///     }
+    ///     Err(e) => panic!("Error: {}", e),
+    /// }
+    /// }
+    /// ```
+    #[cfg(feature = "namespaces")]
+    pub fn apply_xmlns_opts(&self, options: &crate::ns::NsOptions) -> crate::ns::NsResult<NodeRef> {
+        crate::ns::apply_xmlns_opts(self, options)
+    }
+
     /// Applies xmlns namespace declarations to elements and attributes (strict).
+    ///
+    /// **DEPRECATED**: Use [`apply_xmlns_opts`](Self::apply_xmlns_opts) with
+    /// `NsOptions { strict: true, .. }` instead.
     ///
     /// This function works identically to [`apply_xmlns`](Self::apply_xmlns), but returns
     /// an error if any prefixed element or attribute references an undefined namespace prefix.
-    ///
-    /// **Strict mode**: Returns an error if undefined prefixes are encountered, but
-    /// the error contains the rebuilt document with those prefixes assigned null namespaces.
-    ///
-    /// **Note:** This method requires the `namespaces` feature to be enabled.
     ///
     /// # Errors
     ///
@@ -324,6 +380,7 @@ impl NodeRef {
     /// </html>"#;
     ///
     /// let doc = parse_html().one(html);
+    /// #[allow(deprecated)]
     /// match doc.apply_xmlns_strict() {
     ///     Ok(corrected) => println!("All namespaces defined"),
     ///     Err(NsError::UndefinedPrefix(doc, prefixes)) => {
@@ -335,8 +392,18 @@ impl NodeRef {
     /// }
     /// ```
     #[cfg(feature = "namespaces")]
+    #[deprecated(
+        since = "0.9.2",
+        note = "Use `apply_xmlns_opts` with `NsOptions { strict: true, .. }` instead"
+    )]
     pub fn apply_xmlns_strict(&self) -> crate::ns::NsResult<NodeRef> {
-        crate::ns::apply_xmlns_strict(self)
+        crate::ns::apply_xmlns_opts(
+            self,
+            &crate::ns::NsOptions {
+                namespaces: std::collections::HashMap::new(),
+                strict: true,
+            },
+        )
     }
 }
 
