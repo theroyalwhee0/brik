@@ -11,6 +11,25 @@ use std::collections::{HashMap, HashSet};
 
 use super::{NsError, NsResult};
 
+/// Options for configuring namespace processing.
+///
+/// Controls how `apply_xmlns_opts` processes namespace declarations and handles
+/// undefined prefixes.
+#[derive(Debug, Clone, Default)]
+pub struct NsOptions {
+    /// Additional namespace prefix mappings to merge with xmlns declarations from HTML.
+    ///
+    /// These namespaces are added to any `xmlns:*` attributes found in the `<html>` element.
+    /// If a prefix appears in both the HTML and in this map, the HTML declaration takes precedence.
+    pub namespaces: HashMap<String, Namespace>,
+
+    /// Whether to return an error for undefined namespace prefixes.
+    ///
+    /// - `true`: Returns `NsError::UndefinedPrefix` if any prefix is used but not defined
+    /// - `false`: Assigns null namespace to undefined prefixes without error
+    pub strict: bool,
+}
+
 /// Applies xmlns namespace declarations to elements and attributes (lenient).
 ///
 /// This function extracts xmlns declarations from the `<html>` element and applies
@@ -47,20 +66,86 @@ use super::{NsError, NsResult};
 /// // The c:widget element now has proper namespace information
 /// ```
 pub fn apply_xmlns(root: &NodeRef) -> NsResult<NodeRef> {
-    match apply_xmlns_strict(root) {
-        Ok(doc) => Ok(doc),
-        Err(NsError::UndefinedPrefix(doc, _)) => Ok(doc),
-        Err(e) => Err(e),
+    apply_xmlns_opts(root, &NsOptions::default())
+}
+
+/// Applies xmlns namespace declarations to elements and attributes with options.
+///
+/// This function extracts xmlns declarations from the `<html>` element, merges them
+/// with any additional namespaces provided in `options`, and applies them to all
+/// prefixed elements and attributes in the document.
+///
+/// # Arguments
+///
+/// * `root` - The document root node to process
+/// * `options` - Configuration options including additional namespaces and strict mode
+///
+/// # Returns
+///
+/// Returns the rebuilt document with namespace corrections applied.
+///
+/// # Errors
+///
+/// If `options.strict` is `true`, returns `NsError::UndefinedPrefix` if any element
+/// or attribute uses a namespace prefix that has no corresponding declaration.
+/// The error contains the rebuilt document and a list of undefined prefixes.
+///
+/// # Examples
+///
+/// ```
+/// use brik::parse_html;
+/// use brik::traits::*;
+/// use brik::ns::{NsOptions, NsError};
+/// use html5ever::ns;
+/// use std::collections::HashMap;
+///
+/// let html = r#"<html>
+///     <body><svg:rect /><c:widget>Content</c:widget></body>
+/// </html>"#;
+///
+/// let doc = parse_html().one(html);
+///
+/// // Provide additional namespaces via options
+/// let mut namespaces = HashMap::new();
+/// namespaces.insert("svg".to_string(), ns!(svg));
+///
+/// let options = NsOptions {
+///     namespaces,
+///     strict: true,
+/// };
+///
+/// match doc.apply_xmlns_opts(&options) {
+///     Ok(corrected) => println!("svg namespace provided, but c is undefined"),
+///     Err(NsError::UndefinedPrefix(doc, prefixes)) => {
+///         println!("Undefined prefixes: {:?}", prefixes); // ["c"]
+///     }
+///     Err(e) => panic!("Error: {}", e),
+/// }
+/// ```
+pub fn apply_xmlns_opts(root: &NodeRef, options: &NsOptions) -> NsResult<NodeRef> {
+    // Step 1: Extract xmlns declarations from <html> element and merge with options
+    let xmlns_map = extract_xmlns_declarations(root, options);
+
+    // Step 2: Rebuild the document tree with corrected namespaces
+    let mut undefined_prefixes = HashSet::new();
+    let new_root = rebuild_tree(root, &xmlns_map, &mut undefined_prefixes);
+
+    // Step 3: Return result based on strict mode and whether we found undefined prefixes
+    if undefined_prefixes.is_empty() || !options.strict {
+        Ok(new_root)
+    } else {
+        let mut prefix_list: Vec<_> = undefined_prefixes.into_iter().collect();
+        prefix_list.sort();
+        Err(NsError::UndefinedPrefix(new_root, prefix_list))
     }
 }
 
 /// Applies xmlns namespace declarations to elements and attributes (strict).
 ///
+/// **DEPRECATED**: Use [`apply_xmlns_opts`] with `NsOptions { strict: true, .. }` instead.
+///
 /// This function works identically to [`apply_xmlns`], but returns an error if any
 /// prefixed element or attribute references an undefined namespace prefix.
-///
-/// **Strict mode**: Returns an error if undefined prefixes are encountered, but
-/// the error contains the rebuilt document with those prefixes assigned null namespaces.
 ///
 /// # Errors
 ///
@@ -80,6 +165,7 @@ pub fn apply_xmlns(root: &NodeRef) -> NsResult<NodeRef> {
 /// </html>"#;
 ///
 /// let doc = parse_html().one(html);
+/// #[allow(deprecated)]
 /// match doc.apply_xmlns_strict() {
 ///     Ok(corrected) => println!("All namespaces defined"),
 ///     Err(NsError::UndefinedPrefix(doc, prefixes)) => {
@@ -89,31 +175,32 @@ pub fn apply_xmlns(root: &NodeRef) -> NsResult<NodeRef> {
 ///     Err(e) => panic!("Error: {}", e),
 /// }
 /// ```
+#[deprecated(
+    since = "0.9.2",
+    note = "Use `apply_xmlns_opts` with `NsOptions { strict: true, .. }` instead"
+)]
 pub fn apply_xmlns_strict(root: &NodeRef) -> NsResult<NodeRef> {
-    // Step 1: Extract xmlns declarations from <html> element
-    let xmlns_map = extract_xmlns_declarations(root);
-
-    // Step 2: Rebuild the document tree with corrected namespaces
-    let mut undefined_prefixes = HashSet::new();
-    let new_root = rebuild_tree(root, &xmlns_map, &mut undefined_prefixes);
-
-    // Step 3: Return result based on whether we found undefined prefixes
-    if undefined_prefixes.is_empty() {
-        Ok(new_root)
-    } else {
-        let mut prefix_list: Vec<_> = undefined_prefixes.into_iter().collect();
-        prefix_list.sort();
-        Err(NsError::UndefinedPrefix(new_root, prefix_list))
-    }
+    apply_xmlns_opts(
+        root,
+        &NsOptions {
+            namespaces: HashMap::new(),
+            strict: true,
+        },
+    )
 }
 
-/// Extracts xmlns namespace declarations from the document's <html> element.
+/// Extracts xmlns namespace declarations from the document's <html> element
+/// and merges them with additional namespaces from options.
+///
+/// HTML xmlns declarations take precedence over options.namespaces when the same
+/// prefix appears in both.
 ///
 /// Returns a map from prefix to namespace URI.
-fn extract_xmlns_declarations(root: &NodeRef) -> HashMap<String, Namespace> {
-    let mut xmlns_map = HashMap::new();
+fn extract_xmlns_declarations(root: &NodeRef, options: &NsOptions) -> HashMap<String, Namespace> {
+    // Start with options.namespaces as the base
+    let mut xmlns_map = options.namespaces.clone();
 
-    // Find the <html> element
+    // Find the <html> element and overlay its xmlns declarations
     for node in root.descendants() {
         if let Some(element) = node.as_element() {
             if element.name.local.as_ref() == "html" {
@@ -125,6 +212,7 @@ fn extract_xmlns_declarations(root: &NodeRef) -> HashMap<String, Namespace> {
                     // But HTML5 parser might put them in null namespace with name "xmlns:prefix"
                     let local_str = expanded_name.local.as_ref();
                     if let Some(prefix) = local_str.strip_prefix("xmlns:") {
+                        // HTML declarations override options
                         xmlns_map.insert(prefix.to_string(), Namespace::from(attr.value.as_str()));
                     }
                 }
@@ -347,13 +435,46 @@ mod tests {
         assert_eq!(widget.namespace_uri().as_ref(), ""); // Null namespace
     }
 
-    /// Tests strict mode with undefined prefixes.
+    /// Tests strict mode with undefined prefixes using NsOptions.
     ///
     /// Verifies that strict mode returns an error but includes the
     /// processed document in the error.
     #[test]
     #[cfg(feature = "namespaces")]
-    fn apply_xmlns_strict_undefined_prefix() {
+    fn apply_xmlns_opts_strict_undefined_prefix() {
+        let html = r#"<html>
+            <body><c:widget foo:bar="test">Content</c:widget></body>
+        </html>"#;
+
+        let doc = parse_html().one(html);
+        let options = NsOptions {
+            namespaces: HashMap::new(),
+            strict: true,
+        };
+        let err = apply_xmlns_opts(&doc, &options)
+            .expect_err("Should return error for undefined prefixes");
+
+        match err {
+            NsError::UndefinedPrefix(new_doc, prefixes) => {
+                assert_eq!(prefixes.len(), 2);
+                assert!(prefixes.contains(&"c".to_string()));
+                assert!(prefixes.contains(&"foo".to_string()));
+
+                // Document should still be usable
+                let widget = new_doc.select_first("widget").unwrap();
+                assert_eq!(widget.local_name().as_ref(), "widget");
+            }
+            _ => unreachable!("Only UndefinedPrefix errors are possible from strict mode"),
+        }
+    }
+
+    /// Tests deprecated strict mode function.
+    ///
+    /// Verifies that the deprecated apply_xmlns_strict still works.
+    #[test]
+    #[cfg(feature = "namespaces")]
+    #[allow(deprecated)]
+    fn apply_xmlns_strict_deprecated() {
         let html = r#"<html>
             <body><c:widget foo:bar="test">Content</c:widget></body>
         </html>"#;
@@ -373,6 +494,83 @@ mod tests {
             }
             _ => unreachable!("Only UndefinedPrefix errors are possible from apply_xmlns_strict"),
         }
+    }
+
+    /// Tests providing additional namespaces via NsOptions.
+    ///
+    /// Verifies that namespaces provided in options are merged with
+    /// xmlns declarations from HTML.
+    #[test]
+    #[cfg(feature = "namespaces")]
+    fn apply_xmlns_opts_with_provided_namespaces() {
+        let html = r#"<html xmlns:c="https://example.com/custom">
+            <body>
+                <svg:rect />
+                <c:widget>Content</c:widget>
+            </body>
+        </html>"#;
+
+        let doc = parse_html().one(html);
+
+        // Provide SVG namespace via options
+        let mut namespaces = HashMap::new();
+        namespaces.insert("svg".to_string(), ns!(svg));
+
+        let options = NsOptions {
+            namespaces,
+            strict: false,
+        };
+
+        let result = apply_xmlns_opts(&doc, &options).unwrap();
+
+        // SVG rect should have proper namespace from options
+        let rect = result.select_first("rect").unwrap();
+        assert_eq!(rect.local_name().as_ref(), "rect");
+        assert_eq!(rect.prefix().unwrap().as_ref(), "svg");
+        assert_eq!(rect.namespace_uri().as_ref(), "http://www.w3.org/2000/svg");
+
+        // Custom widget should have namespace from HTML
+        let widget = result.select_first("widget").unwrap();
+        assert_eq!(widget.local_name().as_ref(), "widget");
+        assert_eq!(widget.prefix().unwrap().as_ref(), "c");
+        assert_eq!(
+            widget.namespace_uri().as_ref(),
+            "https://example.com/custom"
+        );
+    }
+
+    /// Tests that HTML xmlns declarations override options.namespaces.
+    ///
+    /// Verifies precedence when the same prefix appears in both HTML and options.
+    #[test]
+    #[cfg(feature = "namespaces")]
+    fn apply_xmlns_opts_html_overrides_options() {
+        let html = r#"<html xmlns:custom="https://example.com/html-version">
+            <body><custom:widget>Content</custom:widget></body>
+        </html>"#;
+
+        let doc = parse_html().one(html);
+
+        // Try to provide different namespace via options
+        let mut namespaces = HashMap::new();
+        namespaces.insert(
+            "custom".to_string(),
+            Namespace::from("https://example.com/options-version"),
+        );
+
+        let options = NsOptions {
+            namespaces,
+            strict: false,
+        };
+
+        let result = apply_xmlns_opts(&doc, &options).unwrap();
+
+        // HTML declaration should win
+        let widget = result.select_first("widget").unwrap();
+        assert_eq!(
+            widget.namespace_uri().as_ref(),
+            "https://example.com/html-version"
+        );
     }
 
     /// Tests that HTML template elements are properly handled.

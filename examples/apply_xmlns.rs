@@ -2,12 +2,14 @@
 
 //! Example demonstrating apply_xmlns functionality.
 //!
-//! This example shows how to use apply_xmlns and apply_xmlns_strict to process
+//! This example shows how to use apply_xmlns and apply_xmlns_opts to process
 //! HTML documents with namespace-prefixed elements and attributes.
 
-use brik::ns::NsError;
+use brik::ns::{NsError, NsOptions};
 use brik::parse_html;
 use brik::traits::*;
+use html5ever::ns;
+use std::collections::HashMap;
 
 fn main() {
     println!("=== apply_xmlns Example ===\n");
@@ -74,11 +76,16 @@ fn main() {
     }
     println!();
 
-    // Example 3: Document with undefined namespaces (strict)
-    println!("3. Document with undefined namespace (strict mode):");
+    // Example 3: Document with undefined namespaces (strict mode using NsOptions)
+    println!("3. Document with undefined namespace (strict mode using NsOptions):");
     let doc3 = parse_html().one(html_no_ns);
 
-    match doc3.apply_xmlns_strict() {
+    let strict_options = NsOptions {
+        namespaces: HashMap::new(),
+        strict: true,
+    };
+
+    match doc3.apply_xmlns_opts(&strict_options) {
         Ok(_) => println!("   All namespaces defined (unexpected)"),
         Err(NsError::UndefinedPrefix(result_doc, prefixes)) => {
             println!("   ✗ Error: Found undefined prefixes: {prefixes:?}");
@@ -97,18 +104,27 @@ fn main() {
     }
     println!();
 
-    // Example 4: Mixed defined and undefined prefixes
-    println!("4. Mixed defined and undefined prefixes:");
-    let html_mixed = r#"<html xmlns:good="https://example.com/good">
+    // Example 4: Providing additional namespaces via NsOptions
+    println!("4. Providing additional namespaces via NsOptions:");
+    let html_svg = r#"<html>
     <body>
-        <good:element>This one is defined</good:element>
-        <bad:element>This one is NOT defined</bad:element>
+        <svg:rect width="100" height="100" />
+        <c:widget>Custom widget</c:widget>
     </body>
 </html>"#;
 
-    let doc4 = parse_html().one(html_mixed);
+    let doc4 = parse_html().one(html_svg);
 
-    match doc4.apply_xmlns_strict() {
+    // Provide SVG namespace via options
+    let mut namespaces = HashMap::new();
+    namespaces.insert("svg".to_string(), ns!(svg));
+
+    let options_with_svg = NsOptions {
+        namespaces,
+        strict: true, // Strict mode - will error on undefined 'c' prefix
+    };
+
+    match doc4.apply_xmlns_opts(&options_with_svg) {
         Ok(_) => println!("   All namespaces defined"),
         Err(NsError::UndefinedPrefix(result_doc, prefixes)) => {
             println!(
@@ -116,29 +132,23 @@ fn main() {
                 prefixes.len(),
                 prefixes
             );
+            println!("   Note: 'svg' was provided via options, but 'c' was not defined");
 
-            // Good element should have namespace
-            if let Ok(good) = result_doc.select_first("element") {
-                println!("   First <element>:");
-                println!("     - Prefix: {:?}", good.prefix().map(|p| p.as_ref()));
-                println!("     - Namespace: {}", good.namespace_uri().as_ref());
+            // SVG rect should have proper namespace
+            if let Ok(rect) = result_doc.select_first("rect") {
+                println!("   <rect> element:");
+                println!("     - Prefix: {:?}", rect.prefix().map(|p| p.as_ref()));
+                println!("     - Namespace: {}", rect.namespace_uri().as_ref());
             }
 
-            // Find the bad element (second one)
-            let mut count = 0;
-            for node in result_doc.descendants() {
-                if let Some(elem) = node.as_element() {
-                    if elem.name.local.as_ref() == "element" {
-                        count += 1;
-                        if count == 2 {
-                            println!("   Second <element>:");
-                            if let Some(prefix) = &elem.name.prefix {
-                                println!("     - Prefix: {:?}", prefix.as_ref());
-                            }
-                            println!("     - Namespace: '{}' (null)", elem.name.ns.as_ref());
-                        }
-                    }
-                }
+            // Widget should have null namespace
+            if let Ok(widget) = result_doc.select_first("widget") {
+                println!("   <widget> element:");
+                println!("     - Prefix: {:?}", widget.prefix().map(|p| p.as_ref()));
+                println!(
+                    "     - Namespace: '{}' (null)",
+                    widget.namespace_uri().as_ref()
+                );
             }
         }
         Err(e) => println!("   Unexpected error: {e}"),
